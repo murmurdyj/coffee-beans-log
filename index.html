@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coffee Beans Log 咖啡豆紀錄</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: #F8F0E5;
+      color: #3A2419;
+    }
+    button, input, select, textarea { font-family: inherit; }
+    button { cursor: pointer; border: 0; }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 24px; }
+    .hero {
+      overflow: hidden;
+      border-radius: 32px;
+      padding: 32px;
+      background: linear-gradient(135deg, #FFF9F1 0%, #F6E2C7 58%, #DFAE73 100%);
+      box-shadow: 0 10px 28px rgba(70, 39, 18, .08);
+      margin-bottom: 22px;
+    }
+    .hero-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.7);
+      color: #6A432B;
+      padding: 7px 12px;
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    h1 { margin: 0; font-size: clamp(36px, 6vw, 58px); line-height: 1; letter-spacing: -1.8px; }
+    h2, h3 { margin: 0; }
+    p { line-height: 1.7; }
+    .hero p { max-width: 660px; color: #6A432B; margin: 14px 0 0; }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 18px;
+      padding: 13px 18px;
+      font-weight: 900;
+      font-size: 14px;
+      background: #5B341F;
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(91,52,31,.18);
+      transition: opacity .15s, transform .1s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn.secondary {
+      background: rgba(255,255,255,.78);
+      color: #5B341F;
+      box-shadow: 0 8px 18px rgba(91,52,31,.08);
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 22px;
+    }
+    .panel, .card, .detail, .side-box {
+      background: rgba(255,255,255,.86);
+      border-radius: 28px;
+      box-shadow: 0 8px 24px rgba(70,39,18,.06);
+    }
+    .panel { padding: 16px; margin-bottom: 16px; }
+    .search-wrap { position: relative; }
+    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #A8866B; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #E7D1BC;
+      background: #FFFDF9;
+      border-radius: 18px;
+      padding: 13px 16px;
+      font-size: 15px;
+      outline: none;
+      color: #3A2419;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #B57943; }
+    .search-wrap input { padding-left: 44px; }
+    textarea { min-height: 112px; resize: vertical; }
+    .filters, .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .filters { margin-top: 12px; }
+    .pill {
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 14px;
+      font-weight: 900;
+      background: #F4E3D0;
+      color: #7A4D2B;
+      transition: .15s;
+    }
+    .pill.active { background: #5B341F; color: #fff; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .card {
+      padding: 20px;
+      text-align: left;
+      color: inherit;
+      border: 2px solid transparent;
+      transition: .16s;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(70,39,18,.09); }
+    .card.active { border-color: #5B341F; }
+    .top-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .bean-title { font-size: 20px; font-weight: 1000; line-height: 1.18; }
+    .muted { color: #8C6D57; font-size: 14px; }
+    .badge {
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #F6E6D0;
+      color: #7A4D2B;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .type-tag {
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #F2D6B3;
+      color: #6A432B;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .note-tag {
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #FFF3B0;
+      color: #7B4D00;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .card .tags { margin: 13px 0; }
+    .card-note {
+      min-height: 48px;
+      color: #6A5A4E;
+      font-size: 14px;
+      line-height: 1.7;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .stars { color: #5B341F; letter-spacing: 1px; font-size: 18px; white-space: nowrap; }
+    .card-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+    .detail { padding: 24px; }
+    .side-box { padding: 22px; margin-top: 16px; }
+    .side-box h3 { font-size: 16px; margin-bottom: 6px; }
+    .side-box p { color: #6A5A4E; font-size: 13px; margin: 0 0 14px; line-height: 1.6; }
+    .side-box-actions { display: flex; flex-direction: column; gap: 10px; }
+    .section-box { border-radius: 24px; padding: 16px; margin: 16px 0; }
+    .section-box.type  { background: #FFF8ED; }
+    .section-box.notes { background: #FFFBDE; }
+    .section-title {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px; font-size: 14px; font-weight: 1000;
+    }
+    .section-box.type  .section-title { color: #6A432B; }
+    .section-box.notes .section-title { color: #7B4D00; }
+    .white-tag {
+      border-radius: 999px; padding: 7px 12px;
+      background: #fff; color: #7B4D00;
+      font-size: 14px; font-weight: 900;
+      box-shadow: 0 4px 12px rgba(70,39,18,.06);
+    }
+    .meter { margin: 12px 0; }
+    .meter-top { display: flex; justify-content: space-between; color: #8C6D57; font-size: 12px; margin-bottom: 5px; }
+    .bar { height: 8px; border-radius: 999px; overflow: hidden; background: #F1E1D0; }
+    .bar span { display: block; height: 100%; border-radius: 999px; background: #7A4D2B; }
+    .note-box { background: #F8F0E5; border-radius: 24px; padding: 16px; margin-top: 18px; }
+    .note-box p { color: #5C4B3F; margin: 6px 0 0; font-size: 14px; }
+    .repurchase { border-radius: 999px; padding: 7px 12px; font-size: 14px; font-weight: 1000; background: #5B341F; color: #fff; }
+    .repurchase.no { background: #F4E3D0; color: #7A4D2B; }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 200;
+      padding: 14px 20px; border-radius: 20px;
+      font-size: 14px; font-weight: 900;
+      box-shadow: 0 10px 30px rgba(58,36,25,.18);
+      opacity: 0; transform: translateY(12px);
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+      background: #2E7D52; color: #fff;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.fail { background: #B33A1E; }
+
+    /* modal */
+    .modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(58,36,25,.42); backdrop-filter: blur(5px);
+      padding: 18px; z-index: 50; overflow: auto;
+    }
+    .modal.show { display: flex; align-items: center; justify-content: center; }
+    .modal-inner {
+      width: min(780px, 100%); max-height: 92vh; overflow: auto;
+      background: #FFFDF9; border-radius: 32px; padding: 24px;
+      box-shadow: 0 24px 80px rgba(58,36,25,.25);
+    }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+    .close {
+      width: 42px; height: 42px; border-radius: 999px;
+      background: #F4E3D0; color: #5B341F; font-weight: 1000; font-size: 18px;
+    }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+    label span { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 1000; }
+    .form-section { margin-top: 16px; border-radius: 24px; padding: 16px; }
+    .form-section.type  { background: #FFF8ED; }
+    .form-section.notes { background: #FFFBDE; }
+    .tag-input-row { display: flex; gap: 8px; }
+    .tag-input-row input { flex: 1; }
+    .honey-btn { border-radius: 18px; background: #E8B04A; color: #3A2419; padding: 13px 16px; font-weight: 1000; white-space: nowrap; }
+    .range-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; margin-top: 18px; }
+    input[type="range"] { padding: 0; accent-color: #7A4D2B; }
+    .form-actions { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 18px; flex-wrap: wrap; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; font-weight: 900; }
+    .checkbox-row input { width: auto; }
+    #restoreInput { display: none; }
+
+    @media (max-width: 1080px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      .wrap { padding: 14px; }
+      .hero { padding: 22px; border-radius: 26px; }
+      .hero-inner { flex-direction: column; align-items: flex-start; }
+      .grid, .form-grid, .range-grid { grid-template-columns: 1fr; }
+      .tag-input-row { flex-direction: column; }
+      .toast { bottom: 16px; right: 16px; left: 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow">☕ 咖啡豆風味筆記</div>
+        <h1>Coffee Beans Log</h1>
+        <p>紀錄每支咖啡豆的風味、烘焙、感受。可匯出 CSV 開試算表，或備份 / 還原完整資料。</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn secondary" onclick="exportCSV()">⬇ 匯出 CSV</button>
+        <button class="btn secondary" onclick="backupJSON()">💾 備份</button>
+        <button class="btn secondary" onclick="document.getElementById('restoreInput').click()">↩ 還原</button>
+        <button class="btn" onclick="openModal()">＋ 新增紀錄</button>
+      </div>
+    </div>
+  </header>
+
+  <input type="file" id="restoreInput" accept=".json" onchange="restoreJSON(event)">
+
+  <section class="layout">
+    <main>
+      <div class="panel">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input id="search" oninput="render()" placeholder="搜尋豆名、店家、具體風味、品飲感受…" />
+        </div>
+        <div class="filters" id="roastFilters"></div>
+      </div>
+      <div class="grid" id="cards"></div>
+    </main>
+
+    <aside>
+      <div class="detail" id="detail"></div>
+      <div class="side-box">
+        <div class="eyebrow" style="margin-bottom:12px;">📦 資料管理</div>
+        <h3>匯出 & 備份</h3>
+        <p>CSV 可用 Excel 或 Google Sheet 直接開啟。JSON 備份可完整還原所有紀錄，換電腦或瀏覽器時使用。</p>
+        <div class="side-box-actions">
+          <button class="btn" onclick="exportCSV()">⬇ 匯出 CSV（試算表用）</button>
+          <button class="btn secondary" onclick="backupJSON()">💾 備份 JSON（完整備份）</button>
+          <button class="btn secondary" onclick="document.getElementById('restoreInput').click()">↩ 還原 JSON</button>
+        </div>
+      </div>
+    </aside>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-inner">
+    <div class="modal-head">
+      <h2>新增咖啡豆紀錄</h2>
+      <button class="close" onclick="closeModal()">×</button>
+    </div>
+    <div class="form-grid">
+      <label><span>咖啡豆名稱</span><input id="name" placeholder="例：台東 鹿野紅烏龍"></label>
+      <label><span>烘豆店 / 購買店家</span><input id="shop" placeholder="例：週末咖啡"></label>
+      <label><span>產地</span><input id="origin" placeholder="例：台灣 台東"></label>
+      <label><span>處理法</span><input id="process" placeholder="例：水洗 / 日曬 / 蜜處理"></label>
+      <label><span>烘焙程度</span>
+        <select id="roast">
+          <option>淺焙</option><option>中淺焙</option><option selected>中焙</option><option>中深焙</option><option>深焙</option>
+        </select>
+      </label>
+      <label><span>沖煮方式</span>
+        <select id="brew">
+          <option>手沖</option><option>義式</option><option>愛樂壓</option><option>冰滴</option><option>法壓</option><option>摩卡壺</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="form-section type">
+      <div class="section-title">🍃 風味類型｜固定分類，用來篩選</div>
+      <div class="filters" id="flavorTypePicker"></div>
+    </div>
+
+    <div class="form-section notes">
+      <div class="section-title">✨ 具體風味｜店家寫的明確味道</div>
+      <div class="tag-input-row">
+        <input id="flavorInput" placeholder="例：薰衣草、檸檬草、鹿野紅烏龍" onkeydown="handleFlavorKey(event)">
+        <button class="honey-btn" onclick="addFlavorNote()">加入</button>
+      </div>
+      <div class="tags" id="flavorNoteTags" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="range-grid">
+      <label><span>酸度 <b id="acidityText">3/5</b></span><input id="acidity" type="range" min="1" max="5" value="3" oninput="syncRangeText('acidity')"></label>
+      <label><span>甜感 <b id="sweetnessText">3/5</b></span><input id="sweetness" type="range" min="1" max="5" value="3" oninput="syncRangeText('sweetness')"></label>
+      <label><span>苦感 <b id="bitternessText">2/5</b></span><input id="bitterness" type="range" min="1" max="5" value="2" oninput="syncRangeText('bitterness')"></label>
+      <label><span>厚實度 <b id="bodyText">3/5</b></span><input id="body" type="range" min="1" max="5" value="3" oninput="syncRangeText('body')"></label>
+      <label><span>餘韻 <b id="aftertasteText">3/5</b></span><input id="aftertaste" type="range" min="1" max="5" value="3" oninput="syncRangeText('aftertaste')"></label>
+    </div>
+
+    <label style="display:block; margin-top:18px;">
+      <span>品飲感受</span>
+      <textarea id="note" placeholder="例：熱的時候草本感明顯，冷掉像無糖茶。"></textarea>
+    </label>
+
+    <div class="form-actions">
+      <div>
+        <span style="display:block; margin-bottom:6px; font-weight:1000; font-size:14px;">喜好評分</span>
+        <select id="rating">
+          <option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option>
+        </select>
+      </div>
+      <label class="checkbox-row"><input id="repurchase" type="checkbox"> 會想回購</label>
+      <button class="btn" onclick="saveBean()">儲存紀錄</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const roastOptions = ["全部","淺焙","中淺焙","中焙","中深焙","深焙"];
+const flavorTypes  = ["花香","草本","茶感","柑橘","莓果","熱帶水果","堅果","巧克力","焦糖","酒香","香料"];
+
+let roastFilter         = "全部";
+let selectedId          = 1;
+let selectedFlavorTypes = new Set();
+let selectedFlavorNotes = [];
+
+let beans = JSON.parse(localStorage.getItem("coffeeBeansV2")) || [
+  {
+    id:1, name:"衣索比亞 耶加雪菲", shop:"小巷烘豆所", origin:"衣索比亞",
+    process:"水洗", roast:"淺焙", brew:"手沖",
+    flavorTypes:["花香","柑橘","茶感"], flavorNotes:["檸檬草","白花","紅茶"],
+    acidity:5, sweetness:4, bitterness:1, body:2, aftertaste:4,
+    note:"入口明亮，像檸檬紅茶，冷掉後茶感更明顯。", rating:4, repurchase:true, date:"2026-05-03"
+  },
+  {
+    id:2, name:"台東 鹿野紅烏龍", shop:"週末咖啡", origin:"台灣 台東",
+    process:"蜜處理", roast:"中焙", brew:"手沖",
+    flavorTypes:["茶感","草本","焦糖"], flavorNotes:["鹿野紅烏龍","蜂蜜","檜木"],
+    acidity:2, sweetness:5, bitterness:2, body:3, aftertaste:5,
+    note:"茶感很清楚，甜感乾淨，喝起來像帶蜂蜜香的烏龍茶。", rating:5, repurchase:true, date:"2026-05-01"
+  }
+];
+
+function saveLocal() {
+  localStorage.setItem("coffeeBeansV2", JSON.stringify(beans));
+}
+
+/* ── Toast ── */
+let toastTimer = null;
+function showToast(msg, isError = false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (isError ? " fail" : "");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+/* ══════════════════════════════
+   匯出 CSV
+   \uFEFF BOM 讓 Excel 正確顯示中文
+══════════════════════════════ */
+function exportCSV() {
+  if (!beans.length) { showToast("目前沒有資料可匯出", true); return; }
+  const headers = ["日期","豆名","店家","產地","處理法","烘焙","沖煮",
+                   "風味類型","具體風味","酸度","甜感","苦感","厚實度","餘韻",
+                   "品飲感受","評分","回購"];
+  const rows = beans.map(b => [
+    b.date, b.name, b.shop, b.origin, b.process, b.roast, b.brew,
+    (b.flavorTypes||[]).join("、"),
+    (b.flavorNotes||[]).join("、"),
+    b.acidity, b.sweetness, b.bitterness, b.body, b.aftertaste,
+    b.note, b.rating, b.repurchase ? "是" : "否"
+  ].map(v => `"${String(v ?? "").replace(/"/g, '""')}"`));
+
+  const csv = "\uFEFF" + [headers.map(h=>`"${h}"`), ...rows].map(r=>r.join(",")).join("\n");
+  const today = new Date().toISOString().slice(0,10);
+  download(`咖啡豆紀錄_${today}.csv`, csv, "text/csv;charset=utf-8;");
+  showToast(`已匯出 ${beans.length} 筆 ✓`);
+}
+
+/* ══════════════════════════════
+   備份 JSON
+══════════════════════════════ */
+function backupJSON() {
+  if (!beans.length) { showToast("目前沒有資料可備份", true); return; }
+  const today = new Date().toISOString().slice(0,10);
+  download(`咖啡豆備份_${today}.json`, JSON.stringify(beans, null, 2), "application/json");
+  showToast(`已備份 ${beans.length} 筆 ✓`);
+}
+
+/* ══════════════════════════════
+   還原 JSON
+══════════════════════════════ */
+function restoreJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error("格式錯誤");
+      if (!confirm(`確定還原？目前 ${beans.length} 筆將被覆蓋，匯入 ${data.length} 筆。`)) return;
+      beans = data;
+      selectedId = beans[0]?.id ?? null;
+      saveLocal();
+      render();
+      showToast(`已還原 ${data.length} 筆 ✓`);
+    } catch {
+      showToast("JSON 格式有誤，無法還原", true);
+    }
+    event.target.value = "";
+  };
+  reader.readAsText(file);
+}
+
+/* ── 下載通用 ── */
+function download(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement("a"), { href: url, download: filename });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* ── helpers ── */
+function stars(n) { return "★".repeat(Number(n)) + "☆".repeat(5 - Number(n)); }
+
+function escapeHtml(text) {
+  return String(text ?? "").replace(/[&<>"']/g, c =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+
+function meter(label, value) {
+  return `<div class="meter">
+    <div class="meter-top"><span>${label}</span><span>${value}/5</span></div>
+    <div class="bar"><span style="width:${value*20}%"></span></div>
+  </div>`;
+}
+
+function syncRangeText(id) {
+  document.getElementById(id+"Text").textContent = document.getElementById(id).value + "/5";
+}
+
+/* ── flavor ── */
+function renderFlavorTypePicker() {
+  document.getElementById("flavorTypePicker").innerHTML = flavorTypes.map(item => `
+    <button class="pill ${selectedFlavorTypes.has(item)?"active":""}" onclick="toggleFlavorType('${item}')">${item}</button>
+  `).join("");
+}
+
+function toggleFlavorType(item) {
+  selectedFlavorTypes.has(item) ? selectedFlavorTypes.delete(item) : selectedFlavorTypes.add(item);
+  renderFlavorTypePicker();
+}
+
+function handleFlavorKey(e) { if (e.key==="Enter") { e.preventDefault(); addFlavorNote(); } }
+
+function addFlavorNote() {
+  const input = document.getElementById("flavorInput");
+  const value = input.value.trim();
+  if (!value || selectedFlavorNotes.includes(value)) return;
+  selectedFlavorNotes.push(value);
+  input.value = "";
+  renderFlavorNotes();
+}
+
+function removeFlavorNote(index) { selectedFlavorNotes.splice(index,1); renderFlavorNotes(); }
+
+function renderFlavorNotes() {
+  document.getElementById("flavorNoteTags").innerHTML = selectedFlavorNotes.map((item,i) => `
+    <button class="white-tag" onclick="removeFlavorNote(${i})"># ${escapeHtml(item)} ×</button>
+  `).join("");
+}
+
+/* ── render ── */
+function render() {
+  document.getElementById("roastFilters").innerHTML = roastOptions.map(item => `
+    <button class="pill ${roastFilter===item?"active":""}" onclick="roastFilter='${item}'; render();">${item}</button>
+  `).join("");
+
+  const query    = document.getElementById("search").value.trim().toLowerCase();
+  const filtered = beans.filter(bean => {
+    const text = [bean.name,bean.shop,bean.origin,bean.process,bean.roast,bean.brew,bean.note,
+                  ...(bean.flavorTypes||[]),...(bean.flavorNotes||[])].join(" ").toLowerCase();
+    return (!query || text.includes(query)) && (roastFilter==="全部" || bean.roast===roastFilter);
+  });
+
+  document.getElementById("cards").innerHTML = filtered.map(bean => `
+    <button class="card ${selectedId===bean.id?"active":""}" onclick="selectedId=${bean.id}; render();">
+      <div class="top-row">
+        <div>
+          <div class="bean-title">${escapeHtml(bean.name)}</div>
+          <div class="muted" style="margin-top:6px;">${escapeHtml(bean.shop||"未填店家")}｜${escapeHtml(bean.origin||"未填產地")}</div>
+        </div>
+        <span class="badge">${escapeHtml(bean.roast)}</span>
+      </div>
+      <div class="tags">${(bean.flavorTypes||[]).map(i=>`<span class="type-tag">${escapeHtml(i)}</span>`).join("")}</div>
+      <div class="tags">${(bean.flavorNotes||[]).map(i=>`<span class="note-tag"># ${escapeHtml(i)}</span>`).join("")}</div>
+      <div class="card-note">${escapeHtml(bean.note||"尚未填寫品飲感受")}</div>
+      <div class="card-bottom">
+        <span class="stars">${stars(bean.rating)}</span>
+        <span class="badge">${escapeHtml(bean.brew)}</span>
+      </div>
+    </button>
+  `).join("");
+
+  const selected = beans.find(b=>b.id===selectedId) || beans[0];
+  if (!selected) { document.getElementById("detail").innerHTML = `<p style="padding:24px;color:#8C6D57;">目前沒有資料</p>`; return; }
+
+  document.getElementById("detail").innerHTML = `
+    <div class="top-row">
+      <div>
+        <h2>${escapeHtml(selected.name)}</h2>
+        <div class="muted" style="margin-top:6px;">${escapeHtml(selected.date)}｜${escapeHtml(selected.shop||"未填店家")}</div>
+      </div>
+      <span class="badge" style="background:#5B341F;color:white;">${escapeHtml(selected.roast)}</span>
+    </div>
+    <div class="section-box type">
+      <div class="section-title">🍃 風味類型</div>
+      <div class="tags">
+        ${(selected.flavorTypes||[]).map(i=>`<span class="type-tag">${escapeHtml(i)}</span>`).join("")||`<span class="muted">尚未填寫</span>`}
+      </div>
+    </div>
+    <div class="section-box notes">
+      <div class="section-title">✨ 具體風味</div>
+      <div class="tags">
+        ${(selected.flavorNotes||[]).map(i=>`<span class="white-tag"># ${escapeHtml(i)}</span>`).join("")||`<span class="muted">尚未填寫</span>`}
+      </div>
+    </div>
+    ${meter("酸度",selected.acidity)}
+    ${meter("甜感",selected.sweetness)}
+    ${meter("苦感",selected.bitterness)}
+    ${meter("厚實度",selected.body)}
+    ${meter("餘韻",selected.aftertaste)}
+    <div class="note-box">
+      <strong>品飲感受</strong>
+      <p>${escapeHtml(selected.note||"尚未填寫")}</p>
+    </div>
+    <div class="card-bottom" style="margin-top:18px;">
+      <div>
+        <div class="muted" style="font-weight:900;font-size:12px;">喜好評分</div>
+        <span class="stars">${stars(selected.rating)}</span>
+      </div>
+      <span class="repurchase ${selected.repurchase?"":"no"}">${selected.repurchase?"會回購":"暫不回購"}</span>
+    </div>
+  `;
+}
+
+/* ── modal ── */
+function openModal() {
+  selectedFlavorTypes = new Set();
+  selectedFlavorNotes = [];
+  ["name","shop","origin","process","flavorInput","note"].forEach(id => document.getElementById(id).value="");
+  document.getElementById("roast").value  = "中焙";
+  document.getElementById("brew").value   = "手沖";
+  document.getElementById("rating").value = "4";
+  document.getElementById("repurchase").checked = false;
+  ["acidity","sweetness","body","aftertaste"].forEach(id => { document.getElementById(id).value="3"; syncRangeText(id); });
+  document.getElementById("bitterness").value="2"; syncRangeText("bitterness");
+  renderFlavorTypePicker();
+  renderFlavorNotes();
+  document.getElementById("modal").classList.add("show");
+}
+
+function closeModal() { document.getElementById("modal").classList.remove("show"); }
+
+/* ── saveBean ── */
+function saveBean() {
+  const name = document.getElementById("name").value.trim();
+  if (!name) { alert("請先填咖啡豆名稱"); return; }
+
+  const bean = {
+    id:         Date.now(),
+    date:       new Date().toISOString().slice(0,10),
+    name,
+    shop:       document.getElementById("shop").value.trim(),
+    origin:     document.getElementById("origin").value.trim(),
+    process:    document.getElementById("process").value.trim(),
+    roast:      document.getElementById("roast").value,
+    brew:       document.getElementById("brew").value,
+    flavorTypes: Array.from(selectedFlavorTypes),
+    flavorNotes: [...selectedFlavorNotes],
+    acidity:    Number(document.getElementById("acidity").value),
+    sweetness:  Number(document.getElementById("sweetness").value),
+    bitterness: Number(document.getElementById("bitterness").value),
+    body:       Number(document.getElementById("body").value),
+    aftertaste: Number(document.getElementById("aftertaste").value),
+    note:       document.getElementById("note").value.trim(),
+    rating:     Number(document.getElementById("rating").value),
+    repurchase: document.getElementById("repurchase").checked
+  };
+
+  beans.unshift(bean);
+  selectedId = bean.id;
+  saveLocal();
+  closeModal();
+  render();
+  showToast("已儲存 ✓");
+}
+
+render();
+</script>
+</body>
+</html>
