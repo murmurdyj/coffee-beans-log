@@ -258,6 +258,17 @@
     <div class="form-grid">
       <label><span>咖啡豆名稱</span><input id="name" placeholder="例：台東 鹿野紅烏龍"></label>
       <label><span>烘豆店 / 購買店家</span><input id="shop" placeholder="例：週末咖啡"></label>
+      <label><span>重量</span>
+        <div style="display:flex;gap:8px;">
+          <input id="weight" type="number" min="0" placeholder="例：200" style="flex:1;">
+          <select id="weightUnit" style="width:96px;flex-shrink:0;">
+            <option value="g">g 克</option>
+            <option value="lb">lb 磅</option>
+            <option value="oz">oz 盎司</option>
+          </select>
+        </div>
+      </label>
+      <label><span>價錢（元）</span><input id="price" type="number" min="0" placeholder="例：380"></label>
       <label><span>產地</span><input id="origin" placeholder="例：台灣 台東"></label>
       <label><span>處理法</span><input id="process" placeholder="例：水洗 / 日曬 / 蜜處理"></label>
       <label><span>烘焙程度</span>
@@ -339,11 +350,11 @@ function showToast(msg, isError = false) {
 ══════════════════════════════ */
 function exportCSV() {
   if (!beans.length) { showToast("目前沒有資料可匯出", true); return; }
-  const headers = ["日期","豆名","店家","產地","處理法","烘焙","沖煮",
+  const headers = ["日期","豆名","店家","重量","單位","價錢","產地","處理法","烘焙","沖煮",
                    "風味類型","具體風味","酸度","甜感","苦感","厚實度","餘韻",
                    "品飲感受","評分","回購"];
   const rows = beans.map(b => [
-    b.date, b.name, b.shop, b.origin, b.process, b.roast, b.brew,
+    b.date, b.name, b.shop, b.weight||"", b.weightUnit||"g", b.price||"", b.origin, b.process, b.roast, b.brew,
     (b.flavorTypes||[]).join("、"), (b.flavorNotes||[]).join("、"),
     b.acidity, b.sweetness, b.bitterness, b.body, b.aftertaste,
     b.note, b.rating, b.repurchase ? "是" : "否"
@@ -466,6 +477,9 @@ function editBean(id, e) {
   document.getElementById("note").value    = bean.note    || "";
   document.getElementById("rating").value  = bean.rating  || "4";
   document.getElementById("repurchase").checked = !!bean.repurchase;
+  document.getElementById("weight").value     = bean.weight     || "";
+  document.getElementById("weightUnit").value = bean.weightUnit || "g";
+  document.getElementById("price").value      = bean.price      || "";
 
   selectedFlavorTypes = new Set(bean.flavorTypes || []);
   selectedFlavorNotes = [...(bean.flavorNotes || [])];
@@ -537,6 +551,7 @@ function render() {
       <div>
         <h2>${escapeHtml(selected.name)}</h2>
         <div class="muted" style="margin-top:6px;">${escapeHtml(selected.date)}｜${escapeHtml(selected.shop||"未填店家")}</div>
+        ${(selected.weight) ? `<div class="muted" style="margin-top:4px;">⚖ ${selected.weight} ${selected.weightUnit||"g"}${selected.price ? " ／ NT$" + selected.price : ""}</div>` : (selected.price ? `<div class="muted" style="margin-top:4px;">NT$${selected.price}</div>` : "")}
       </div>
       <span class="badge" style="background:#5B341F;color:white;">${escapeHtml(selected.roast)}</span>
     </div>
@@ -577,7 +592,8 @@ function openModal() {
   document.getElementById("modalTitle").textContent = "新增咖啡豆紀錄";
   selectedFlavorTypes = new Set();
   selectedFlavorNotes = [];
-  ["name","shop","origin","process","flavorInput","note"].forEach(id => document.getElementById(id).value="");
+  ["name","shop","origin","process","flavorInput","note","weight","price"].forEach(id => document.getElementById(id).value="");
+  document.getElementById("weightUnit").value="g";
   document.getElementById("roast").value  = "中焙";
   document.getElementById("brew").value   = "手沖";
   document.getElementById("rating").value = "4";
@@ -615,7 +631,10 @@ function saveBean() {
     aftertaste: Number(document.getElementById("aftertaste").value),
     note:       document.getElementById("note").value.trim(),
     rating:     Number(document.getElementById("rating").value),
-    repurchase: document.getElementById("repurchase").checked
+    repurchase: document.getElementById("repurchase").checked,
+    weight:     document.getElementById("weight").value ? Number(document.getElementById("weight").value) : null,
+    weightUnit: document.getElementById("weightUnit").value,
+    price:      document.getElementById("price").value ? Number(document.getElementById("price").value) : null
   };
 
   if (editingId) {
