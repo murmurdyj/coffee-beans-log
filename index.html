@@ -3,214 +3,161 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coffee Beans Log</title>
+  <title>Coffee Log</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-      background: #F8F0E5;
-      color: #3A2419;
-    }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; background: #F8F0E5; color: #3A2419; }
     button, input, select, textarea { font-family: inherit; }
     button { cursor: pointer; border: 0; }
     .wrap { max-width: 960px; margin: 0 auto; padding: 24px; }
+    h1,h2,h3 { margin: 0; }
+    p { line-height: 1.7; margin: 0; }
 
     /* ── hero ── */
-    .hero {
-      border-radius: 32px; padding: 32px;
-      background: linear-gradient(135deg, #FFF9F1 0%, #F6E2C7 58%, #DFAE73 100%);
-      box-shadow: 0 10px 28px rgba(70,39,18,.08); margin-bottom: 22px;
-    }
-    .hero-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-    .eyebrow {
-      display: inline-flex; align-items: center; gap: 8px;
-      border-radius: 999px; background: rgba(255,255,255,.7);
-      color: #6A432B; padding: 7px 12px; font-size: 14px; font-weight: 800; margin-bottom: 12px;
-    }
-    h1 { margin: 0; font-size: clamp(32px,5vw,52px); line-height: 1; letter-spacing: -1.5px; }
-    h2, h3 { margin: 0; }
-    p { line-height: 1.7; margin: 0; }
-    .hero p { max-width: 560px; color: #6A432B; margin-top: 12px; }
-    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+    .hero { border-radius: 32px; padding: 28px 32px; background: linear-gradient(135deg,#FFF9F1 0%,#F6E2C7 58%,#DFAE73 100%); box-shadow: 0 10px 28px rgba(70,39,18,.08); margin-bottom: 0; }
+    .hero-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: rgba(255,255,255,.7); color: #6A432B; padding: 6px 12px; font-size: 13px; font-weight: 800; margin-bottom: 10px; }
+    h1 { font-size: clamp(28px,4.5vw,46px); line-height: 1; letter-spacing: -1.5px; }
+    .hero p { color: #6A432B; margin-top: 8px; font-size: 14px; }
+    .hero-actions { display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+
+    /* ── tabs ── */
+    .tabs { display: flex; gap: 4px; background: rgba(255,255,255,.6); border-radius: 0 0 28px 28px; padding: 12px 16px; box-shadow: 0 6px 20px rgba(70,39,18,.06); margin-bottom: 20px; }
+    .tab { border-radius: 14px; padding: 10px 20px; font-size: 14px; font-weight: 900; background: transparent; color: #A8866B; transition: .15s; }
+    .tab.active { background: #5B341F; color: #fff; box-shadow: 0 4px 12px rgba(91,52,31,.2); }
 
     /* ── buttons ── */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      gap: 7px; border-radius: 18px; padding: 12px 18px;
-      font-weight: 900; font-size: 14px;
-      background: #5B341F; color: #fff;
-      box-shadow: 0 6px 16px rgba(91,52,31,.18);
-      transition: transform .1s, box-shadow .1s;
-      white-space: nowrap;
-    }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-radius: 16px; padding: 10px 16px; font-weight: 900; font-size: 13px; background: #5B341F; color: #fff; box-shadow: 0 5px 14px rgba(91,52,31,.18); transition: transform .1s; white-space: nowrap; }
     .btn:active { transform: scale(.97); }
-    .btn.secondary { background: rgba(255,255,255,.82); color: #5B341F; box-shadow: 0 4px 14px rgba(91,52,31,.08); }
+    .btn.secondary { background: rgba(255,255,255,.85); color: #5B341F; box-shadow: 0 3px 10px rgba(91,52,31,.08); }
     .btn.danger    { background: #B33A1E; }
-    .btn.sm        { padding: 8px 14px; font-size: 13px; border-radius: 14px; }
+    .btn.sm        { padding: 7px 13px; font-size: 12px; border-radius: 12px; }
 
-    /* ── search / filter panel ── */
-    .panel { background: rgba(255,255,255,.86); border-radius: 24px; padding: 16px; margin-bottom: 18px; box-shadow: 0 4px 16px rgba(70,39,18,.05); }
+    /* ── inputs ── */
+    .panel { background: rgba(255,255,255,.86); border-radius: 22px; padding: 14px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(70,39,18,.05); }
     .search-wrap { position: relative; }
-    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #A8866B; font-size: 18px; pointer-events: none; }
-    input, select, textarea {
-      width: 100%; border: 1.5px solid #E7D1BC; background: #FFFDF9;
-      border-radius: 16px; padding: 12px 16px; font-size: 15px; outline: none; color: #3A2419;
-      transition: border-color .15s;
-    }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #A8866B; pointer-events: none; }
+    input, select, textarea { width: 100%; border: 1.5px solid #E7D1BC; background: #FFFDF9; border-radius: 14px; padding: 11px 14px; font-size: 14px; outline: none; color: #3A2419; transition: border-color .15s; }
     input:focus, select:focus, textarea:focus { border-color: #B57943; }
-    .search-wrap input { padding-left: 44px; }
-    textarea { min-height: 100px; resize: vertical; }
-    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-    .tags    { display: flex; flex-wrap: wrap; gap: 8px; }
-    .pill { border-radius: 999px; padding: 6px 13px; font-size: 13px; font-weight: 900; background: #F4E3D0; color: #7A4D2B; transition: .15s; }
+    .search-wrap input { padding-left: 40px; }
+    textarea { min-height: 90px; resize: vertical; }
+    .filters { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .tags    { display: flex; flex-wrap: wrap; gap: 7px; }
+    .pill { border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 900; background: #F4E3D0; color: #7A4D2B; transition: .15s; }
     .pill.active { background: #5B341F; color: #fff; }
 
-    /* ── cards grid ── */
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-
-    .card {
-      background: rgba(255,255,255,.9);
-      border-radius: 22px;
-      padding: 18px 18px 16px;
-      text-align: left; color: inherit;
-      border: 1.5px solid transparent;
-      box-shadow: 0 4px 16px rgba(70,39,18,.06);
-      transition: transform .16s, box-shadow .16s, border-color .16s;
-      cursor: pointer;
-      position: relative;
-      display: flex; flex-direction: column; gap: 0;
-    }
-    .card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(70,39,18,.10); border-color: #E7D1BC; }
-
-    /* card action buttons — show on hover */
-    .card-actions {
-      position: absolute; top: 12px; right: 12px;
-      display: flex; gap: 5px;
-      opacity: 0; transition: opacity .15s;
-    }
-    .card:hover .card-actions,
-    .card:focus-within .card-actions { opacity: 1; }
-    .icon-btn {
-      width: 28px; height: 28px; border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px;
-    }
+    /* ── cards ── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); gap: 13px; }
+    .card { background: rgba(255,255,255,.9); border-radius: 20px; padding: 16px; text-align: left; color: inherit; border: 1.5px solid transparent; box-shadow: 0 4px 14px rgba(70,39,18,.06); transition: transform .15s,box-shadow .15s,border-color .15s; cursor: pointer; position: relative; display: flex; flex-direction: column; }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(70,39,18,.10); border-color: #E7D1BC; }
+    .card-actions { position: absolute; top: 11px; right: 11px; display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+    .card:hover .card-actions, .card:focus-within .card-actions { opacity: 1; }
+    .icon-btn { width: 27px; height: 27px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
     .icon-btn.edit   { background: #F0E4D4; color: #5B341F; }
     .icon-btn.delete { background: #FAE4DF; color: #B33A1E; }
-
-    /* card content */
-    .card-name  { font-size: 17px; font-weight: 1000; line-height: 1.2; padding-right: 60px; margin-bottom: 4px; }
-    .card-sub   { font-size: 12px; color: #A8866B; margin-bottom: 10px; }
-    .card-tags  { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-    .card-tag   { border-radius: 999px; padding: 4px 9px; font-size: 11px; font-weight: 900; background: #F2D6B3; color: #6A432B; }
+    .card-name  { font-size: 16px; font-weight: 1000; line-height: 1.2; padding-right: 56px; margin-bottom: 3px; }
+    .card-sub   { font-size: 12px; color: #A8866B; margin-bottom: 9px; }
+    .card-tags  { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 9px; }
+    .card-tag   { border-radius: 999px; padding: 3px 8px; font-size: 11px; font-weight: 900; background: #F2D6B3; color: #6A432B; }
     .card-tag.note { background: #FFF3B0; color: #7B4D00; }
-    .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 10px; border-top: 1px solid #F0E4D4; }
-    .card-stars { font-size: 13px; color: #5B341F; letter-spacing: 1px; }
-    .card-roast { border-radius: 999px; padding: 4px 9px; background: #F6E6D0; color: #7A4D2B; font-size: 11px; font-weight: 900; }
-    .card-price { font-size: 12px; color: #A8866B; font-weight: 900; margin-top: 3px; }
+    .card-tag.brew { background: #E8F4E8; color: #2E6B3E; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 9px; border-top: 1px solid #F0E4D4; }
+    .card-stars { font-size: 12px; color: #5B341F; letter-spacing: 1px; }
+    .card-badge { border-radius: 999px; padding: 3px 8px; background: #F6E6D0; color: #7A4D2B; font-size: 11px; font-weight: 900; }
+    .card-badge.green { background: #E8F4E8; color: #2E6B3E; }
+    .card-price { font-size: 11px; color: #A8866B; font-weight: 900; margin-top: 2px; }
+    .card-params { font-size: 11px; color: #8C6D57; margin-top: 4px; line-height: 1.6; }
 
-    /* ── empty state ── */
-    .empty-state { grid-column: 1/-1; padding: 60px 24px; text-align: center; color: #A8866B; }
-    .empty-state .big { font-size: 52px; margin-bottom: 14px; }
-    .empty-state p { font-size: 15px; }
+    /* ── empty ── */
+    .empty-state { grid-column: 1/-1; padding: 56px 24px; text-align: center; color: #A8866B; }
+    .empty-state .big { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
 
-    /* ── tags in detail ── */
-    .type-tag  { border-radius: 999px; padding: 6px 11px; background: #F2D6B3; color: #6A432B; font-size: 13px; font-weight: 900; }
-    .note-tag  { border-radius: 999px; padding: 6px 11px; background: #FFF3B0; color: #7B4D00; font-size: 13px; font-weight: 900; }
-    .white-tag { border-radius: 999px; padding: 6px 11px; background: #fff; color: #7B4D00; font-size: 13px; font-weight: 900; box-shadow: 0 3px 10px rgba(70,39,18,.06); }
-    .badge     { border-radius: 999px; padding: 6px 10px; background: #F6E6D0; color: #7A4D2B; font-size: 12px; font-weight: 900; white-space: nowrap; }
-    .stars     { color: #5B341F; letter-spacing: 1px; font-size: 18px; white-space: nowrap; }
+    /* ── detail tags ── */
+    .type-tag  { border-radius: 999px; padding: 5px 10px; background: #F2D6B3; color: #6A432B; font-size: 12px; font-weight: 900; }
+    .note-tag  { border-radius: 999px; padding: 5px 10px; background: #FFF3B0; color: #7B4D00; font-size: 12px; font-weight: 900; }
+    .white-tag { border-radius: 999px; padding: 5px 10px; background: #fff; color: #7B4D00; font-size: 12px; font-weight: 900; box-shadow: 0 2px 8px rgba(70,39,18,.06); }
+    .stars     { color: #5B341F; letter-spacing: 1px; font-size: 17px; white-space: nowrap; }
     .muted     { color: #8C6D57; font-size: 13px; }
 
     /* ── meter ── */
-    .meter { margin: 10px 0; }
+    .meter { margin: 9px 0; }
     .meter-top { display: flex; justify-content: space-between; color: #8C6D57; font-size: 12px; margin-bottom: 4px; }
     .bar { height: 7px; border-radius: 999px; overflow: hidden; background: #F1E1D0; }
     .bar span { display: block; height: 100%; border-radius: 999px; background: #7A4D2B; }
 
+    /* ── params grid in detail ── */
+    .params-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 14px 0; }
+    .param-item { background: #F8F0E5; border-radius: 14px; padding: 10px 12px; }
+    .param-label { font-size: 11px; color: #A8866B; font-weight: 900; margin-bottom: 3px; }
+    .param-value { font-size: 15px; font-weight: 1000; color: #3A2419; }
+
     /* ── toast ── */
-    .toast {
-      position: fixed; bottom: 28px; right: 28px; z-index: 300;
-      padding: 13px 20px; border-radius: 18px;
-      font-size: 14px; font-weight: 900;
-      box-shadow: 0 10px 28px rgba(58,36,25,.15);
-      opacity: 0; transform: translateY(10px);
-      transition: opacity .28s, transform .28s;
-      pointer-events: none;
-      background: #2E7D52; color: #fff;
-    }
+    .toast { position: fixed; bottom: 26px; right: 26px; z-index: 300; padding: 12px 18px; border-radius: 16px; font-size: 13px; font-weight: 900; box-shadow: 0 8px 24px rgba(58,36,25,.14); opacity: 0; transform: translateY(8px); transition: opacity .25s,transform .25s; pointer-events: none; background: #2E7D52; color: #fff; }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.fail { background: #B33A1E; }
 
     /* ── modals ── */
-    .modal {
-      display: none; position: fixed; inset: 0;
-      background: rgba(58,36,25,.44); backdrop-filter: blur(6px);
-      padding: 18px; z-index: 100; overflow-y: auto;
-    }
-    .modal.show { display: flex; align-items: flex-start; justify-content: center; padding-top: max(18px, 5vh); }
-
-    /* detail modal */
-    .detail-inner {
-      width: min(560px,100%);
-      background: #FFFDF9; border-radius: 32px; padding: 28px;
-      box-shadow: 0 24px 80px rgba(58,36,25,.22);
-    }
-    .detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-    .detail-title { font-size: 26px; font-weight: 1000; line-height: 1.15; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(58,36,25,.44); backdrop-filter: blur(6px); padding: 16px; z-index: 100; overflow-y: auto; }
+    .modal.show { display: flex; align-items: flex-start; justify-content: center; padding-top: max(16px,4vh); }
+    .detail-inner { width: min(540px,100%); background: #FFFDF9; border-radius: 28px; padding: 24px; box-shadow: 0 20px 70px rgba(58,36,25,.22); }
+    .form-inner   { width: min(720px,100%); background: #FFFDF9; border-radius: 28px; padding: 24px; box-shadow: 0 20px 70px rgba(58,36,25,.22); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .detail-title { font-size: 24px; font-weight: 1000; line-height: 1.15; }
     .detail-sub   { color: #8C6D57; font-size: 13px; margin-top: 4px; }
-    .close { width: 40px; height: 40px; border-radius: 999px; background: #F0E4D4; color: #5B341F; font-weight: 1000; font-size: 17px; flex-shrink: 0; }
-
-    .section-box { border-radius: 20px; padding: 14px; margin: 14px 0; }
+    .close { width: 38px; height: 38px; border-radius: 999px; background: #F0E4D4; color: #5B341F; font-weight: 1000; font-size: 16px; flex-shrink: 0; }
+    .section-box { border-radius: 18px; padding: 13px; margin: 12px 0; }
     .section-box.type  { background: #FFF8ED; }
     .section-box.notes { background: #FFFBDE; }
-    .section-title { font-size: 13px; font-weight: 1000; margin-bottom: 8px; color: #6A432B; }
+    .section-box.params { background: #F0F8F0; }
+    .section-title { font-size: 12px; font-weight: 1000; margin-bottom: 8px; color: #6A432B; }
     .section-box.notes .section-title { color: #7B4D00; }
-
-    .note-box { background: #F8F0E5; border-radius: 20px; padding: 14px; margin-top: 14px; }
-    .note-box p { color: #5C4B3F; margin: 5px 0 0; font-size: 14px; line-height: 1.65; }
-    .repurchase { border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 1000; background: #5B341F; color: #fff; }
+    .section-box.params .section-title { color: #2E6B3E; }
+    .note-box { background: #F8F0E5; border-radius: 18px; padding: 13px; margin-top: 12px; }
+    .note-box p { color: #5C4B3F; margin: 4px 0 0; font-size: 13px; line-height: 1.65; }
+    .repurchase { border-radius: 999px; padding: 5px 11px; font-size: 12px; font-weight: 1000; background: #5B341F; color: #fff; }
     .repurchase.no { background: #F4E3D0; color: #7A4D2B; }
-
-    .detail-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
-    .detail-actions { display: flex; gap: 8px; margin-top: 14px; }
-
-    /* form modal */
-    .form-inner {
-      width: min(740px,100%);
-      background: #FFFDF9; border-radius: 32px; padding: 28px;
-      box-shadow: 0 24px 80px rgba(58,36,25,.22);
-    }
-    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
-    .form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; }
-    label span { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 1000; }
-    .form-section { margin-top: 14px; border-radius: 20px; padding: 14px; }
-    .form-section.type  { background: #FFF8ED; }
-    .form-section.notes { background: #FFFBDE; }
-    .tag-input-row { display: flex; gap: 8px; }
+    .detail-footer  { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+    .detail-actions { display: flex; gap: 7px; margin-top: 12px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+    .form-grid-3 { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+    label span { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 1000; }
+    .form-section { margin-top: 12px; border-radius: 18px; padding: 13px; }
+    .form-section.type   { background: #FFF8ED; }
+    .form-section.notes  { background: #FFFBDE; }
+    .form-section.params { background: #F0F8F0; }
+    .tag-input-row { display: flex; gap: 7px; }
     .tag-input-row input { flex: 1; }
-    .honey-btn { border-radius: 16px; background: #E8B04A; color: #3A2419; padding: 12px 15px; font-weight: 1000; white-space: nowrap; font-size: 14px; }
-    .range-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 10px; margin-top: 16px; }
+    .honey-btn { border-radius: 14px; background: #E8B04A; color: #3A2419; padding: 11px 14px; font-weight: 1000; white-space: nowrap; font-size: 13px; }
+    .range-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 9px; margin-top: 14px; }
     input[type="range"] { padding: 0; accent-color: #7A4D2B; }
-    .form-actions { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
-    .checkbox-row { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 14px; }
+    .form-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+    .checkbox-row { display: flex; align-items: center; gap: 7px; font-weight: 900; font-size: 13px; }
     .checkbox-row input { width: auto; }
+
+    /* bean search dropdown */
+    .bean-search-wrap { position: relative; }
+    .bean-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1.5px solid #E7D1BC; border-radius: 14px; z-index: 50; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 24px rgba(70,39,18,.12); display: none; }
+    .bean-dropdown.show { display: block; }
+    .bean-option { padding: 10px 14px; font-size: 13px; cursor: pointer; transition: background .1s; }
+    .bean-option:hover { background: #FFF8ED; }
+
     #restoreInput { display: none; }
 
-    @media (max-width: 680px) {
-      .wrap { padding: 14px; }
-      .hero { padding: 20px; border-radius: 24px; }
+    @media (max-width: 640px) {
+      .wrap { padding: 12px; }
+      .hero { padding: 18px 20px; border-radius: 22px; }
       .hero-inner { flex-direction: column; align-items: flex-start; }
-      .form-grid, .range-grid { grid-template-columns: 1fr; }
+      .form-grid, .form-grid-3, .range-grid, .params-grid { grid-template-columns: 1fr; }
       .tag-input-row { flex-direction: column; }
-      .toast { bottom: 14px; right: 14px; left: 14px; }
+      .toast { bottom: 12px; right: 12px; left: 12px; }
       .card-actions { opacity: 1; }
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -218,67 +165,60 @@
   <header class="hero">
     <div class="hero-inner">
       <div>
-        <div class="eyebrow">☕ 咖啡豆風味筆記</div>
-        <h1>Coffee Beans Log</h1>
-        <p>紀錄每支咖啡豆的風味、烘焙、感受。</p>
+        <div class="eyebrow" id="heroEyebrow">☕ 咖啡豆風味筆記</div>
+        <h1>Coffee Log</h1>
+        <p id="heroDesc">紀錄豆子風味、沖煮參數，跨裝置同步。</p>
       </div>
-      <div class="hero-actions">
-        <button class="btn secondary" onclick="exportCSV()">⬇ CSV</button>
-        <button class="btn secondary" onclick="exportXLSX()">⬇ Excel</button>
-        <button class="btn secondary" onclick="backupJSON()">💾 備份</button>
-        <button class="btn secondary" onclick="document.getElementById('restoreInput').click()">↩ 還原</button>
-        <button class="btn" onclick="openFormModal()">＋ 新增</button>
-      </div>
+      <div class="hero-actions" id="heroActions"></div>
     </div>
   </header>
 
-  <input type="file" id="restoreInput" accept=".json" onchange="restoreJSON(event)">
-
-  <div class="panel">
-    <div class="search-wrap">
-      <span class="search-icon">⌕</span>
-      <input id="search" oninput="render()" placeholder="搜尋豆名、店家、風味…" />
-    </div>
-    <div class="filters" id="roastFilters"></div>
+  <div class="tabs">
+    <button class="tab active" id="tabBeans" onclick="switchTab('beans')">☕ 咖啡豆紀錄</button>
+    <button class="tab"        id="tabBrews" onclick="switchTab('brews')">🫗 沖煮日誌</button>
   </div>
 
-  <div class="grid" id="cards"></div>
-</div>
+  <input type="file" id="restoreInput" accept=".json" onchange="restoreJSON(event)">
 
-<!-- ── 詳情 modal ── -->
-<div class="modal" id="detailModal">
+  <!-- beans tab -->
+  <div id="pageBeans">
+    <div class="panel">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input id="beanSearch" oninput="renderBeans()" placeholder="搜尋豆名、店家、風味…" />
+      </div>
+      <div class="filters" id="roastFilters"></div>
+    </div>
+    <div class="grid" id="beanCards"></div>
+  </div>
+
+  <!-- brews tab -->
+  <div id="pageBrews" style="display:none;">
+    <div class="panel">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input id="brewSearch" oninput="renderBrews()" placeholder="搜尋豆名、沖煮方式、感受…" />
+      </div>
+    </div>
+    <div class="grid" id="brewCards"></div>
+  </div>
+
+</div><!-- /wrap -->
+
+<!-- ══ BEAN DETAIL modal ══ -->
+<div class="modal" id="beanDetailModal">
   <div class="detail-inner">
     <div class="detail-head">
-      <div>
-        <div class="detail-title" id="dName"></div>
-        <div class="detail-sub"  id="dSub"></div>
-      </div>
-      <button class="close" onclick="closeDetail()">×</button>
+      <div><div class="detail-title" id="dName"></div><div class="detail-sub" id="dSub"></div></div>
+      <button class="close" onclick="closeBeanDetail()">×</button>
     </div>
-
     <div id="dPriceLine"></div>
-
-    <div class="section-box type">
-      <div class="section-title">🍃 風味類型</div>
-      <div class="tags" id="dFlavorTypes"></div>
-    </div>
-    <div class="section-box notes">
-      <div class="section-title">✨ 具體風味</div>
-      <div class="tags" id="dFlavorNotes"></div>
-    </div>
-
+    <div class="section-box type"><div class="section-title">🍃 風味類型</div><div class="tags" id="dFlavorTypes"></div></div>
+    <div class="section-box notes"><div class="section-title">✨ 具體風味</div><div class="tags" id="dFlavorNotes"></div></div>
     <div id="dMeters"></div>
-
-    <div class="note-box">
-      <strong style="font-size:13px;">品飲感受</strong>
-      <p id="dNote"></p>
-    </div>
-
+    <div class="note-box"><strong style="font-size:12px;">品飲感受</strong><p id="dNote"></p></div>
     <div class="detail-footer">
-      <div>
-        <div class="muted" style="font-size:11px;font-weight:900;margin-bottom:2px;">喜好評分</div>
-        <span class="stars" id="dStars"></span>
-      </div>
+      <div><div class="muted" style="font-size:11px;font-weight:900;margin-bottom:2px;">喜好評分</div><span class="stars" id="dStars"></span></div>
       <span class="repurchase" id="dRepurchase"></span>
     </div>
     <div class="detail-actions">
@@ -288,77 +228,141 @@
   </div>
 </div>
 
-<!-- ── 新增／編輯 modal ── -->
-<div class="modal" id="formModal">
+<!-- ══ BEAN FORM modal ══ -->
+<div class="modal" id="beanFormModal">
   <div class="form-inner">
     <div class="modal-head">
-      <h2 id="modalTitle" style="font-size:20px;">新增咖啡豆紀錄</h2>
-      <button class="close" onclick="closeFormModal()">×</button>
+      <h2 id="beanModalTitle" style="font-size:18px;">新增咖啡豆紀錄</h2>
+      <button class="close" onclick="closeBeanForm()">×</button>
     </div>
-
     <div class="form-grid">
-      <label><span>咖啡豆名稱</span><input id="name" placeholder="例：台東 鹿野紅烏龍"></label>
-      <label><span>烘豆店 / 購買店家</span><input id="shop" placeholder="例：週末咖啡"></label>
+      <label><span>咖啡豆名稱</span><input id="bName" placeholder="例：台東 鹿野紅烏龍"></label>
+      <label><span>烘豆店 / 購買店家</span><input id="bShop" placeholder="例：週末咖啡"></label>
       <label><span>重量</span>
-        <div style="display:flex;gap:8px;">
-          <input id="weight" type="number" min="0" placeholder="例：200" style="flex:1;">
-          <select id="weightUnit" style="width:90px;flex-shrink:0;">
-            <option value="g">g 克</option>
-            <option value="lb">lb 磅</option>
-            <option value="oz">oz 盎司</option>
-          </select>
+        <div style="display:flex;gap:7px;">
+          <input id="bWeight" type="number" min="0" placeholder="200" style="flex:1;">
+          <select id="bWeightUnit" style="width:86px;flex-shrink:0;"><option value="g">g 克</option><option value="lb">lb 磅</option><option value="oz">oz 盎司</option></select>
         </div>
       </label>
-      <label><span>價錢（元）</span><input id="price" type="number" min="0" placeholder="例：380"></label>
-      <label><span>產地</span><input id="origin" placeholder="例：台灣 台東"></label>
-      <label><span>處理法</span><input id="process" placeholder="例：水洗 / 日曬 / 蜜處理"></label>
+      <label><span>價錢（元）</span><input id="bPrice" type="number" min="0" placeholder="380"></label>
+      <label><span>產地</span><input id="bOrigin" placeholder="例：台灣 台東"></label>
+      <label><span>處理法</span><input id="bProcess" placeholder="水洗 / 日曬 / 蜜處理"></label>
       <label><span>烘焙程度</span>
-        <select id="roast">
-          <option>淺焙</option><option>中淺焙</option><option selected>中焙</option><option>中深焙</option><option>深焙</option>
-        </select>
+        <select id="bRoast"><option>淺焙</option><option>中淺焙</option><option selected>中焙</option><option>中深焙</option><option>深焙</option></select>
       </label>
       <label><span>沖煮方式</span>
-        <select id="brew">
-          <option>手沖</option><option>義式</option><option>愛樂壓</option><option>冰滴</option><option>法壓</option><option>摩卡壺</option>
-        </select>
+        <select id="bBrew"><option>手沖</option><option>義式</option><option>愛樂壓</option><option>冰滴</option><option>法壓</option><option>摩卡壺</option></select>
       </label>
     </div>
-
     <div class="form-section type">
-      <div class="section-title" style="margin-bottom:10px;">🍃 風味類型</div>
+      <div class="section-title" style="margin-bottom:8px;">🍃 風味類型</div>
       <div class="filters" id="flavorTypePicker"></div>
     </div>
     <div class="form-section notes">
-      <div class="section-title" style="margin-bottom:10px;">✨ 具體風味</div>
+      <div class="section-title" style="margin-bottom:8px;">✨ 具體風味</div>
       <div class="tag-input-row">
-        <input id="flavorInput" placeholder="例：薰衣草、檸檬草" onkeydown="handleFlavorKey(event)">
+        <input id="flavorInput" placeholder="薰衣草、檸檬草…" onkeydown="handleFlavorKey(event)">
         <button class="honey-btn" onclick="addFlavorNote()">加入</button>
       </div>
-      <div class="tags" id="flavorNoteTags" style="margin-top:10px;"></div>
+      <div class="tags" id="flavorNoteTags" style="margin-top:9px;"></div>
     </div>
-
     <div class="range-grid">
-      <label><span>酸度 <b id="acidityText">3/5</b></span><input id="acidity" type="range" min="1" max="5" value="3" oninput="syncRangeText('acidity')"></label>
-      <label><span>甜感 <b id="sweetnessText">3/5</b></span><input id="sweetness" type="range" min="1" max="5" value="3" oninput="syncRangeText('sweetness')"></label>
-      <label><span>苦感 <b id="bitternessText">2/5</b></span><input id="bitterness" type="range" min="1" max="5" value="2" oninput="syncRangeText('bitterness')"></label>
-      <label><span>厚實度 <b id="bodyText">3/5</b></span><input id="body" type="range" min="1" max="5" value="3" oninput="syncRangeText('body')"></label>
-      <label><span>餘韻 <b id="aftertasteText">3/5</b></span><input id="aftertaste" type="range" min="1" max="5" value="3" oninput="syncRangeText('aftertaste')"></label>
+      <label><span>酸度 <b id="acidityText">3/5</b></span><input id="bAcidity" type="range" min="1" max="5" value="3" oninput="syncRange('bAcidity','acidityText')"></label>
+      <label><span>甜感 <b id="sweetnessText">3/5</b></span><input id="bSweetness" type="range" min="1" max="5" value="3" oninput="syncRange('bSweetness','sweetnessText')"></label>
+      <label><span>苦感 <b id="bitternessText">2/5</b></span><input id="bBitterness" type="range" min="1" max="5" value="2" oninput="syncRange('bBitterness','bitternessText')"></label>
+      <label><span>厚實度 <b id="bodyText">3/5</b></span><input id="bBody" type="range" min="1" max="5" value="3" oninput="syncRange('bBody','bodyText')"></label>
+      <label><span>餘韻 <b id="aftertasteText">3/5</b></span><input id="bAftertaste" type="range" min="1" max="5" value="3" oninput="syncRange('bAftertaste','aftertasteText')"></label>
+    </div>
+    <label style="display:block;margin-top:14px;"><span>品飲感受</span><textarea id="bNote" placeholder="熱的時候草本感明顯，冷掉像無糖茶。"></textarea></label>
+    <div class="form-actions">
+      <div><span style="display:block;margin-bottom:4px;font-size:12px;font-weight:1000;">喜好評分</span><select id="bRating" style="width:76px;"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option></select></div>
+      <label class="checkbox-row"><input id="bRepurchase" type="checkbox"> 會想回購</label>
+      <button class="btn" onclick="saveBean()">儲存紀錄</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BREW DETAIL modal ══ -->
+<div class="modal" id="brewDetailModal">
+  <div class="detail-inner">
+    <div class="detail-head">
+      <div><div class="detail-title" id="brDName"></div><div class="detail-sub" id="brDSub"></div></div>
+      <button class="close" onclick="closeBrewDetail()">×</button>
+    </div>
+    <div class="section-box params">
+      <div class="section-title">⚗️ 沖煮參數</div>
+      <div class="params-grid" id="brDParams"></div>
+    </div>
+    <div id="brDMeters"></div>
+    <div class="note-box" id="brDNoteBox"><strong style="font-size:12px;">品飲感受</strong><p id="brDNote"></p></div>
+    <div class="note-box" style="margin-top:8px;" id="brDVsBox"><strong style="font-size:12px;">跟之前比</strong><p id="brDVs"></p></div>
+    <div class="note-box" style="margin-top:8px;" id="brDEqBox"><strong style="font-size:12px;">器材備註</strong><p id="brDEq"></p></div>
+    <div class="detail-footer">
+      <div><div class="muted" style="font-size:11px;font-weight:900;margin-bottom:2px;">整體評分</div><span class="stars" id="brDStars"></span></div>
+    </div>
+    <div class="detail-actions">
+      <button class="btn secondary sm" id="brDEditBtn">✎ 編輯</button>
+      <button class="btn danger sm"    id="brDDeleteBtn">✕ 刪除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BREW FORM modal ══ -->
+<div class="modal" id="brewFormModal">
+  <div class="form-inner">
+    <div class="modal-head">
+      <h2 id="brewModalTitle" style="font-size:18px;">新增沖煮紀錄</h2>
+      <button class="close" onclick="closeBrewForm()">×</button>
     </div>
 
-    <label style="display:block;margin-top:16px;">
-      <span>品飲感受</span>
-      <textarea id="note" placeholder="例：熱的時候草本感明顯，冷掉像無糖茶。"></textarea>
-    </label>
+    <!-- bean search -->
+    <div class="form-grid" style="margin-bottom:12px;">
+      <label>
+        <span>咖啡豆（搜尋選擇）</span>
+        <div class="bean-search-wrap">
+          <input id="brBeanInput" placeholder="輸入豆名關鍵字…" oninput="searchBeans()" onblur="hideBeanDropdown()" autocomplete="off">
+          <div class="bean-dropdown" id="beanDropdown"></div>
+        </div>
+      </label>
+      <label><span>沖煮方式</span>
+        <select id="brMethod"><option>手沖</option><option>義式</option><option>愛樂壓</option><option>冰滴</option><option>法壓</option><option>摩卡壺</option></select>
+      </label>
+    </div>
+
+    <!-- params -->
+    <div class="form-section params">
+      <div class="section-title" style="margin-bottom:10px;">⚗️ 沖煮參數</div>
+      <div class="form-grid-3">
+        <label><span>水溫（°C）</span><input id="brTemp" type="number" min="60" max="100" placeholder="92"></label>
+        <label><span>粉量（g）</span><input id="brDose" type="number" min="0" step="0.1" placeholder="15" oninput="calcWater()"></label>
+        <label><span>水量（ml）</span><input id="brWater" type="number" min="0" placeholder="225" oninput="calcRatio()"></label>
+        <label><span>粉水比</span><input id="brRatio" placeholder="1:15" oninput="calcWaterFromRatio()"></label>
+        <label><span>研磨刻度</span><input id="brGrind" type="number" step="0.5" placeholder="3.5"></label>
+        <label><span>悶蒸時間</span><input id="brBloom" placeholder="0:30" oninput="formatTime(this)"></label>
+      </div>
+      <div class="form-grid" style="margin-top:10px;">
+        <label><span>總沖煮時間</span><input id="brBrewTime" placeholder="2:30" oninput="formatTime(this)"></label>
+      </div>
+    </div>
+
+    <!-- taste -->
+    <div class="range-grid" style="margin-top:14px;">
+      <label><span>酸度 <b id="brAcidityText">3/5</b></span><input id="brAcidity" type="range" min="1" max="5" value="3" oninput="syncRange('brAcidity','brAcidityText')"></label>
+      <label><span>甜感 <b id="brSweetnessText">3/5</b></span><input id="brSweetness" type="range" min="1" max="5" value="3" oninput="syncRange('brSweetness','brSweetnessText')"></label>
+      <label><span>苦感 <b id="brBitternessText">2/5</b></span><input id="brBitterness" type="range" min="1" max="5" value="2" oninput="syncRange('brBitterness','brBitternessText')"></label>
+      <label><span>厚實度 <b id="brBodyText">3/5</b></span><input id="brBody" type="range" min="1" max="5" value="3" oninput="syncRange('brBody','brBodyText')"></label>
+      <label><span>餘韻 <b id="brAftertasteText">3/5</b></span><input id="brAftertaste" type="range" min="1" max="5" value="3" oninput="syncRange('brAftertaste','brAftertasteText')"></label>
+    </div>
+
+    <div class="form-grid" style="margin-top:12px;">
+      <label><span>品飲感受</span><textarea id="brNote" placeholder="今天喝起來怎麼樣？"></textarea></label>
+      <label><span>跟之前比</span><textarea id="brVs" placeholder="比上次酸一點、水溫降5度好很多…"></textarea></label>
+    </div>
+    <label style="display:block;margin-top:12px;"><span>器材備註</span><input id="brEquip" placeholder="Fellow ODE、Stagg X…"></label>
 
     <div class="form-actions">
-      <div>
-        <span style="display:block;margin-bottom:5px;font-size:13px;font-weight:1000;">喜好評分</span>
-        <select id="rating" style="width:80px;">
-          <option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option>
-        </select>
-      </div>
-      <label class="checkbox-row"><input id="repurchase" type="checkbox"> 會想回購</label>
-      <button class="btn" onclick="saveBean()">儲存紀錄</button>
+      <div><span style="display:block;margin-bottom:4px;font-size:12px;font-weight:1000;">整體評分</span><select id="brRating" style="width:76px;"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option></select></div>
+      <button class="btn" onclick="saveBrew()">儲存紀錄</button>
     </div>
   </div>
 </div>
@@ -366,446 +370,477 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ══════════════════════════════════════════
-   Supabase 設定
-══════════════════════════════════════════ */
-const SUPABASE_URL = "https://glniiranoesystyrjhod.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Zt8_FrR8SAlzzbk_y6nZJA_ReZS4Kxp";
-const API = `${SUPABASE_URL}/rest/v1/beans`;
-const HEADERS = {
-  "Content-Type": "application/json",
-  "apikey": SUPABASE_KEY,
-  "Authorization": `Bearer ${SUPABASE_KEY}`,
-  "Prefer": "return=representation"
-};
-
-/* ── DB helpers ── */
-async function dbFetch() {
-  const res = await fetch(`${API}?order=created_at.desc`, { headers: HEADERS });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+/* ══ Supabase ══ */
+const SUPA_URL = "https://glniiranoesystyrjhod.supabase.co";
+const SUPA_KEY = "sb_publishable_Zt8_FrR8SAlzzbk_y6nZJA_ReZS4Kxp";
+function apiHeaders(prefer="return=representation") {
+  return { "Content-Type":"application/json", "apikey":SUPA_KEY, "Authorization":`Bearer ${SUPA_KEY}`, "Prefer":prefer };
 }
-async function dbInsert(row) {
-  const res = await fetch(API, { method:"POST", headers: HEADERS, body: JSON.stringify(row) });
-  if (!res.ok) throw new Error(await res.text());
-  return (await res.json())[0];
+async function dbQ(table, params="") {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}${params}`, { headers: apiHeaders("") });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
 }
-async function dbUpdate(id, row) {
-  const res = await fetch(`${API}?id=eq.${id}`, { method:"PATCH", headers: HEADERS, body: JSON.stringify(row) });
-  if (!res.ok) throw new Error(await res.text());
-  return (await res.json())[0];
+async function dbInsert(table, row) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, { method:"POST", headers: apiHeaders(), body: JSON.stringify(row) });
+  if (!r.ok) throw new Error(await r.text());
+  return (await r.json())[0];
 }
-async function dbDelete(id) {
-  const res = await fetch(`${API}?id=eq.${id}`, { method:"DELETE", headers: HEADERS });
-  if (!res.ok) throw new Error(await res.text());
+async function dbUpdate(table, id, row) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, { method:"PATCH", headers: apiHeaders(), body: JSON.stringify(row) });
+  if (!r.ok) throw new Error(await r.text());
+  return (await r.json())[0];
+}
+async function dbDelete(table, id) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, { method:"DELETE", headers: apiHeaders("") });
+  if (!r.ok) throw new Error(await r.text());
 }
 
-/* ── row <-> local bean 轉換 ── */
-function rowToBean(r) {
-  return {
-    id:          r.id,
-    date:        r.date,
-    name:        r.name,
-    shop:        r.shop,
-    weight:      r.weight,
-    weightUnit:  r.weight_unit,
-    price:       r.price,
-    origin:      r.origin,
-    process:     r.process,
-    roast:       r.roast,
-    brew:        r.brew,
-    flavorTypes: r.flavor_types ? r.flavor_types.split(",").map(s=>s.trim()).filter(Boolean) : [],
-    flavorNotes: r.flavor_notes ? r.flavor_notes.split(",").map(s=>s.trim()).filter(Boolean) : [],
-    acidity:     r.acidity,
-    sweetness:   r.sweetness,
-    bitterness:  r.bitterness,
-    body:        r.body,
-    aftertaste:  r.aftertaste,
-    note:        r.note,
-    rating:      r.rating,
-    repurchase:  r.repurchase
-  };
-}
-function beanToRow(b) {
-  return {
-    date:         b.date,
-    name:         b.name,
-    shop:         b.shop        || null,
-    weight:       b.weight      || null,
-    weight_unit:  b.weightUnit  || "g",
-    price:        b.price       || null,
-    origin:       b.origin      || null,
-    process:      b.process     || null,
-    roast:        b.roast       || null,
-    brew:         b.brew        || null,
-    flavor_types: (b.flavorTypes||[]).join(", "),
-    flavor_notes: (b.flavorNotes||[]).join(", "),
-    acidity:      b.acidity,
-    sweetness:    b.sweetness,
-    bitterness:   b.bitterness,
-    body:         b.body,
-    aftertaste:   b.aftertaste,
-    note:         b.note        || null,
-    rating:       b.rating,
-    repurchase:   b.repurchase  || false
-  };
-}
-
+/* ══ State ══ */
 const roastOptions = ["全部","淺焙","中淺焙","中焙","中深焙","深焙"];
 const flavorTypes  = ["花香","草本","茶感","柑橘","莓果","熱帶水果","堅果","巧克力","焦糖","酒香","香料"];
+let currentTab = "beans";
+let beans = [], brews = [];
+let roastFilter = "全部";
+let selectedFlavorTypes = new Set(), selectedFlavorNotes = [];
+let editingBeanId = null, editingBrewId = null;
 
-let roastFilter         = "全部";
-let selectedFlavorTypes = new Set();
-let selectedFlavorNotes = [];
-let editingId           = null;
-let detailId            = null;
-
-let beans = JSON.parse(localStorage.getItem("coffeeBeansV2")) || [];
-
-// localStorage 只當快取備用
-function saveLocal() { localStorage.setItem("coffeeBeansV2", JSON.stringify(beans)); }
-
-/* ── Toast ── */
-let toastTimer = null;
-function showToast(msg, isError = false) {
+/* ══ Toast ══ */
+let toastTimer;
+function showToast(msg, isError=false) {
   const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "toast show" + (isError ? " fail" : "");
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("show"), 3000);
+  t.textContent = msg; t.className = "toast show"+(isError?" fail":"");
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 3000);
 }
 
-/* ── Helpers ── */
-function stars(n)  { return "★".repeat(Number(n)) + "☆".repeat(5 - Number(n)); }
-function today()   { return new Date().toISOString().slice(0,10); }
-function esc(t)    {
-  return String(t ?? "").replace(/[&<>"']/g, c =>
-    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-}
-function meter(label, value) {
-  return `<div class="meter">
-    <div class="meter-top"><span>${label}</span><span>${value}/5</span></div>
-    <div class="bar"><span style="width:${value*20}%"></span></div>
-  </div>`;
-}
-function syncRangeText(id) {
-  document.getElementById(id+"Text").textContent = document.getElementById(id).value+"/5";
-}
+/* ══ Helpers ══ */
+function stars(n) { return "★".repeat(Number(n))+"☆".repeat(5-Number(n)); }
+function today()  { return new Date().toISOString().slice(0,10); }
+function esc(t)   { return String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])); }
+function meter(label,val) { return `<div class="meter"><div class="meter-top"><span>${label}</span><span>${val}/5</span></div><div class="bar"><span style="width:${val*20}%"></span></div></div>`; }
+function syncRange(inputId, labelId) { document.getElementById(labelId).textContent = document.getElementById(inputId).value+"/5"; }
+function param(label,val) { return val!=null&&val!==""?`<div class="param-item"><div class="param-label">${label}</div><div class="param-value">${esc(String(val))}</div></div>`:""; }
 
-/* ── Export / Backup / Restore ── */
-function exportCSV() {
-  if (!beans.length) { showToast("目前沒有資料", true); return; }
-  const headers = ["日期","豆名","店家","重量","單位","價錢","產地","處理法","烘焙","沖煮",
-                   "風味類型","具體風味","酸度","甜感","苦感","厚實度","餘韻","品飲感受","評分","回購"];
-  const rows = beans.map(b => [
-    b.date, b.name, b.shop, b.weight||"", b.weightUnit||"g", b.price||"",
-    b.origin, b.process, b.roast, b.brew,
-    (b.flavorTypes||[]).join("、"), (b.flavorNotes||[]).join("、"),
-    b.acidity, b.sweetness, b.bitterness, b.body, b.aftertaste,
-    b.note, b.rating, b.repurchase?"是":"否"
-  ].map(v => `"${String(v??"").replace(/"/g,'""')}"`));
-  const csv = "\uFEFF" + [headers.map(h=>`"${h}"`), ...rows].map(r=>r.join(",")).join("\n");
-  download(`咖啡豆紀錄_${today()}.csv`, csv, "text/csv;charset=utf-8;");
-  showToast(`已匯出 ${beans.length} 筆 ✓`);
+/* ══ Time format ══ */
+function formatTime(input) {
+  let v = input.value.replace(/[^0-9]/g,"");
+  if (v.length>=3) { v = v.slice(0,-2)+":"+v.slice(-2); }
+  input.value = v;
 }
-function exportXLSX() {
-  if (!beans.length) { showToast("目前沒有資料", true); return; }
-  const headers = ["日期","豆名","店家","重量","單位","價錢","產地","處理法","烘焙","沖煮",
-                   "風味類型","具體風味","酸度","甜感","苦感","厚實度","餘韻","品飲感受","評分","回購"];
-  const rows = beans.map(b => [
-    b.date, b.name, b.shop, b.weight||"", b.weightUnit||"g", b.price||"",
-    b.origin, b.process, b.roast, b.brew,
-    (b.flavorTypes||[]).join("、"), (b.flavorNotes||[]).join("、"),
-    b.acidity, b.sweetness, b.bitterness, b.body, b.aftertaste,
-    b.note, b.rating, b.repurchase?"是":"否"
-  ]);
+function secsToMmss(s) { if(!s&&s!==0) return ""; const m=Math.floor(s/60),ss=s%60; return `${m}:${String(ss).padStart(2,"0")}`; }
+function mmssToSecs(str) { if(!str) return null; const p=String(str).split(":"); return p.length===2?parseInt(p[0])*60+parseInt(p[1]):parseInt(str)||null; }
 
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-
-  // 欄寬設定
-  ws["!cols"] = [
-    {wch:12},{wch:20},{wch:16},{wch:8},{wch:6},{wch:8},
-    {wch:14},{wch:14},{wch:10},{wch:10},
-    {wch:24},{wch:24},{wch:6},{wch:6},{wch:6},{wch:8},{wch:6},
-    {wch:36},{wch:6},{wch:6}
-  ];
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "咖啡豆紀錄");
-  XLSX.writeFile(wb, `咖啡豆紀錄_${today()}.xlsx`);
-  showToast(`已匯出 Excel ${beans.length} 筆 ✓`);
+/* ══ Water calc ══ */
+function calcWater() {
+  const dose = parseFloat(document.getElementById("brDose").value);
+  const ratio = document.getElementById("brRatio").value||"1:15";
+  const m = ratio.match(/1\s*[:：]\s*([\d.]+)/);
+  if (dose && m) { document.getElementById("brWater").value = Math.round(dose * parseFloat(m[1])); }
+}
+function calcRatio() {
+  const dose  = parseFloat(document.getElementById("brDose").value);
+  const water = parseFloat(document.getElementById("brWater").value);
+  if (dose && water) { document.getElementById("brRatio").value = `1:${(water/dose).toFixed(1)}`; }
+}
+function calcWaterFromRatio() {
+  const dose = parseFloat(document.getElementById("brDose").value);
+  const m = document.getElementById("brRatio").value.match(/1\s*[:：]\s*([\d.]+)/);
+  if (dose && m) { document.getElementById("brWater").value = Math.round(dose * parseFloat(m[1])); }
 }
 
-function backupJSON() {
-  if (!beans.length) { showToast("目前沒有資料", true); return; }
-  download(`咖啡豆備份_${today()}.json`, JSON.stringify(beans,null,2), "application/json");
-  showToast(`已備份 ${beans.length} 筆 ✓`);
+/* ══ Bean search dropdown ══ */
+function searchBeans() {
+  const q = document.getElementById("brBeanInput").value.trim().toLowerCase();
+  const dd = document.getElementById("beanDropdown");
+  if (!q) { dd.classList.remove("show"); return; }
+  const matches = beans.filter(b=>b.name.toLowerCase().includes(q));
+  if (!matches.length) { dd.classList.remove("show"); return; }
+  dd.innerHTML = matches.map(b=>`<div class="bean-option" onmousedown="selectBean(${b.id})">${esc(b.name)}${b.shop?` · <span style="color:#A8866B;">${esc(b.shop)}</span>`:""}</div>`).join("");
+  dd.classList.add("show");
 }
-function restoreJSON(event) {
-  const file = event.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!Array.isArray(data)) throw new Error();
-      if (!confirm(`確定還原？目前 ${beans.length} 筆將被覆蓋，匯入 ${data.length} 筆。\n資料也會同步上傳到 Supabase。`)) return;
-      showToast("上傳中…請稍候");
-      for (const b of data) {
-        await dbInsert(beanToRow(b));
-      }
-      await loadFromDB();
-      showToast(`已還原並同步 ${data.length} 筆 ✓`);
-    } catch(e) { showToast("還原失敗："+e.message, true); }
-    event.target.value = "";
-  };
-  reader.readAsText(file);
+function selectBean(id) {
+  const b = beans.find(x=>x.id===id); if(!b) return;
+  document.getElementById("brBeanInput").value = b.name;
+  document.getElementById("beanDropdown").classList.remove("show");
 }
-function download(filename, content, mimeType) {
-  const blob = new Blob([content], { type: mimeType });
-  const url  = URL.createObjectURL(blob);
-  const a    = Object.assign(document.createElement("a"), { href: url, download: filename });
-  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
+function hideBeanDropdown() { setTimeout(()=>document.getElementById("beanDropdown").classList.remove("show"), 150); }
 
-/* ── Flavor pickers ── */
-function renderFlavorTypePicker() {
-  document.getElementById("flavorTypePicker").innerHTML = flavorTypes.map(item => `
-    <button class="pill ${selectedFlavorTypes.has(item)?"active":""}" onclick="toggleFlavorType('${item}')">${item}</button>
-  `).join("");
+/* ══ Tab switch ══ */
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById("pageBeans").style.display = tab==="beans"?"block":"none";
+  document.getElementById("pageBrews").style.display = tab==="brews"?"block":"none";
+  document.getElementById("tabBeans").className = "tab"+(tab==="beans"?" active":"");
+  document.getElementById("tabBrews").className = "tab"+(tab==="brews"?" active":"");
+  updateHero();
 }
-function toggleFlavorType(item) {
-  selectedFlavorTypes.has(item) ? selectedFlavorTypes.delete(item) : selectedFlavorTypes.add(item);
-  renderFlavorTypePicker();
-}
-function handleFlavorKey(e) { if (e.key==="Enter") { e.preventDefault(); addFlavorNote(); } }
-function addFlavorNote() {
-  const input = document.getElementById("flavorInput");
-  const value = input.value.trim();
-  if (!value || selectedFlavorNotes.includes(value)) return;
-  selectedFlavorNotes.push(value); input.value = ""; renderFlavorNotes();
-}
-function removeFlavorNote(i) { selectedFlavorNotes.splice(i,1); renderFlavorNotes(); }
-function renderFlavorNotes() {
-  document.getElementById("flavorNoteTags").innerHTML = selectedFlavorNotes.map((item,i) => `
-    <button class="white-tag" onclick="removeFlavorNote(${i})"># ${esc(item)} ×</button>
-  `).join("");
+function updateHero() {
+  const sharedBtns = `
+    <button class="btn secondary" onclick="exportAllCSV()">⬇ 全部 CSV</button>
+    <button class="btn secondary" onclick="exportAllXLSX()">⬇ 全部 Excel</button>
+    <button class="btn secondary" onclick="backupJSON()">💾 備份</button>
+    <button class="btn secondary" onclick="document.getElementById('restoreInput').click()">↩ 還原</button>`;
+  if (currentTab==="beans") {
+    document.getElementById("heroEyebrow").textContent = "☕ 咖啡豆風味筆記";
+    document.getElementById("heroDesc").textContent    = "紀錄每支豆子的風味、烘焙、感受。";
+    document.getElementById("heroActions").innerHTML = sharedBtns +
+      `<button class="btn" onclick="openBeanForm()">＋ 新增</button>`;
+  } else {
+    document.getElementById("heroEyebrow").textContent = "🫗 每日沖煮日誌";
+    document.getElementById("heroDesc").textContent    = "記錄每次沖的參數與味道差異。";
+    document.getElementById("heroActions").innerHTML = sharedBtns +
+      `<button class="btn" onclick="openBrewForm()">＋ 新增</button>`;
+  }
 }
 
-/* ── Detail modal ── */
-function openDetail(id) {
-  const b = beans.find(x=>x.id===id); if (!b) return;
-  detailId = id;
-
-  document.getElementById("dName").textContent  = b.name;
-  document.getElementById("dSub").textContent   = `${b.date}｜${b.shop||"未填店家"}｜${b.roast} · ${b.brew}`;
-
-  // price/weight line
-  const priceParts = [];
-  if (b.weight) priceParts.push(`⚖ ${b.weight} ${b.weightUnit||"g"}`);
-  if (b.price)  priceParts.push(`NT$${b.price}`);
-  const pl = document.getElementById("dPriceLine");
-  pl.innerHTML = priceParts.length
-    ? `<div class="muted" style="margin:6px 0 2px;">${priceParts.join(" ／ ")}</div>`
-    : "";
-
-  document.getElementById("dFlavorTypes").innerHTML =
-    (b.flavorTypes||[]).map(i=>`<span class="type-tag">${esc(i)}</span>`).join("") ||
-    `<span class="muted">尚未填寫</span>`;
-  document.getElementById("dFlavorNotes").innerHTML =
-    (b.flavorNotes||[]).map(i=>`<span class="white-tag"># ${esc(i)}</span>`).join("") ||
-    `<span class="muted">尚未填寫</span>`;
-
-  document.getElementById("dMeters").innerHTML =
-    meter("酸度",b.acidity)+meter("甜感",b.sweetness)+meter("苦感",b.bitterness)+
-    meter("厚實度",b.body)+meter("餘韻",b.aftertaste);
-
-  document.getElementById("dNote").textContent = b.note || "尚未填寫";
-  document.getElementById("dStars").textContent = stars(b.rating);
-  const rep = document.getElementById("dRepurchase");
-  rep.textContent = b.repurchase ? "會回購" : "暫不回購";
-  rep.className   = "repurchase" + (b.repurchase ? "" : " no");
-
-  document.getElementById("dEditBtn").onclick   = () => { closeDetail(); editBean(id); };
-  document.getElementById("dDeleteBtn").onclick = () => deleteBean(id);
-
-  document.getElementById("detailModal").classList.add("show");
+/* ══ Beans: row convert ══ */
+function rowToBean(r) {
+  return { id:r.id, date:r.date, name:r.name, shop:r.shop, weight:r.weight, weightUnit:r.weight_unit,
+    price:r.price, origin:r.origin, process:r.process, roast:r.roast, brew:r.brew,
+    flavorTypes: r.flavor_types?r.flavor_types.split(",").map(s=>s.trim()).filter(Boolean):[],
+    flavorNotes: r.flavor_notes?r.flavor_notes.split(",").map(s=>s.trim()).filter(Boolean):[],
+    acidity:r.acidity, sweetness:r.sweetness, bitterness:r.bitterness,
+    body:r.body, aftertaste:r.aftertaste, note:r.note, rating:r.rating, repurchase:r.repurchase };
 }
-function closeDetail() { document.getElementById("detailModal").classList.remove("show"); }
-
-/* ── Delete ── */
-async function deleteBean(id) {
-  const b = beans.find(x=>x.id===id); if (!b) return;
-  if (!confirm(`刪除「${b.name}」？`)) return;
-  try {
-    await dbDelete(id);
-    beans = beans.filter(x=>x.id!==id);
-    saveLocal(); closeDetail(); render(); showToast("已刪除 ✓");
-  } catch(e) { showToast("刪除失敗："+e.message, true); }
+function beanToRow(b) {
+  return { date:b.date, name:b.name, shop:b.shop||null, weight:b.weight||null, weight_unit:b.weightUnit||"g",
+    price:b.price||null, origin:b.origin||null, process:b.process||null, roast:b.roast||null, brew:b.brew||null,
+    flavor_types:(b.flavorTypes||[]).join(", "), flavor_notes:(b.flavorNotes||[]).join(", "),
+    acidity:b.acidity, sweetness:b.sweetness, bitterness:b.bitterness,
+    body:b.body, aftertaste:b.aftertaste, note:b.note||null, rating:b.rating, repurchase:b.repurchase||false };
 }
 
-/* ── Edit ── */
-function editBean(id) {
-  const b = beans.find(x=>x.id===id); if (!b) return;
-  editingId = id;
-  document.getElementById("modalTitle").textContent = "編輯咖啡豆紀錄";
-
-  document.getElementById("name").value    = b.name    || "";
-  document.getElementById("shop").value    = b.shop    || "";
-  document.getElementById("weight").value  = b.weight  || "";
-  document.getElementById("weightUnit").value = b.weightUnit || "g";
-  document.getElementById("price").value   = b.price   || "";
-  document.getElementById("origin").value  = b.origin  || "";
-  document.getElementById("process").value = b.process || "";
-  document.getElementById("roast").value   = b.roast   || "中焙";
-  document.getElementById("brew").value    = b.brew    || "手沖";
-  document.getElementById("note").value    = b.note    || "";
-  document.getElementById("rating").value  = b.rating  || "4";
-  document.getElementById("repurchase").checked = !!b.repurchase;
-
-  selectedFlavorTypes = new Set(b.flavorTypes||[]);
-  selectedFlavorNotes = [...(b.flavorNotes||[])];
-  const s = { acidity:b.acidity, sweetness:b.sweetness, bitterness:b.bitterness, body:b.body, aftertaste:b.aftertaste };
-  Object.entries(s).forEach(([k,v]) => { document.getElementById(k).value=v??3; syncRangeText(k); });
-  document.getElementById("flavorInput").value = "";
-  renderFlavorTypePicker(); renderFlavorNotes();
-  document.getElementById("formModal").classList.add("show");
+/* ══ Brews: row convert ══ */
+function rowToBrew(r) {
+  return { id:r.id, date:r.date, beanName:r.bean_name, method:r.brew_method,
+    temp:r.water_temp, dose:r.dose, water:r.water_amount, ratio:r.dose&&r.water_amount?`1:${(r.water_amount/r.dose).toFixed(1)}`:"1:15",
+    grind:r.grind_size, bloom:r.bloom_time, brewTime:r.brew_time,
+    acidity:r.acidity, sweetness:r.sweetness, bitterness:r.bitterness,
+    body:r.body, aftertaste:r.aftertaste, note:r.note, vsNote:r.vs_note, equipment:r.equipment, rating:r.rating };
+}
+function brewToRow(b) {
+  return { date:b.date, bean_name:b.beanName||null, brew_method:b.method||null,
+    water_temp:b.temp||null, dose:b.dose||null, water_amount:b.water||null,
+    grind_size:b.grind||null, bloom_time:b.bloom||null, brew_time:b.brewTime||null,
+    acidity:b.acidity, sweetness:b.sweetness, bitterness:b.bitterness,
+    body:b.body, aftertaste:b.aftertaste, note:b.note||null,
+    vs_note:b.vsNote||null, equipment:b.equipment||null, rating:b.rating };
 }
 
-/* ── Form modal open / close ── */
-function openFormModal() {
-  editingId = null;
-  document.getElementById("modalTitle").textContent = "新增咖啡豆紀錄";
-  selectedFlavorTypes = new Set(); selectedFlavorNotes = [];
-  ["name","shop","origin","process","flavorInput","note","weight","price"].forEach(id => document.getElementById(id).value="");
-  document.getElementById("weightUnit").value = "g";
-  document.getElementById("roast").value   = "中焙";
-  document.getElementById("brew").value    = "手沖";
-  document.getElementById("rating").value  = "4";
-  document.getElementById("repurchase").checked = false;
-  ["acidity","sweetness","body","aftertaste"].forEach(id=>{ document.getElementById(id).value="3"; syncRangeText(id); });
-  document.getElementById("bitterness").value="2"; syncRangeText("bitterness");
-  renderFlavorTypePicker(); renderFlavorNotes();
-  document.getElementById("formModal").classList.add("show");
-}
-function closeFormModal() { document.getElementById("formModal").classList.remove("show"); editingId=null; }
-
-/* ── Save ── */
-async function saveBean() {
-  const name = document.getElementById("name").value.trim();
-  if (!name) { alert("請先填咖啡豆名稱"); return; }
-  const data = {
-    date:       editingId ? (beans.find(b=>b.id===editingId)?.date||today()) : today(),
-    name,
-    shop:       document.getElementById("shop").value.trim(),
-    weight:     document.getElementById("weight").value ? Number(document.getElementById("weight").value) : null,
-    weightUnit: document.getElementById("weightUnit").value,
-    price:      document.getElementById("price").value ? Number(document.getElementById("price").value) : null,
-    origin:     document.getElementById("origin").value.trim(),
-    process:    document.getElementById("process").value.trim(),
-    roast:      document.getElementById("roast").value,
-    brew:       document.getElementById("brew").value,
-    flavorTypes: Array.from(selectedFlavorTypes),
-    flavorNotes: [...selectedFlavorNotes],
-    acidity:    Number(document.getElementById("acidity").value),
-    sweetness:  Number(document.getElementById("sweetness").value),
-    bitterness: Number(document.getElementById("bitterness").value),
-    body:       Number(document.getElementById("body").value),
-    aftertaste: Number(document.getElementById("aftertaste").value),
-    note:       document.getElementById("note").value.trim(),
-    rating:     Number(document.getElementById("rating").value),
-    repurchase: document.getElementById("repurchase").checked
-  };
-  try {
-    if (editingId) {
-      const updated = await dbUpdate(editingId, beanToRow(data));
-      const idx = beans.findIndex(b=>b.id===editingId);
-      if (idx!==-1) beans[idx] = rowToBean(updated || { id:editingId, ...beanToRow(data) });
-      showToast("已更新 ✓");
-    } else {
-      const inserted = await dbInsert(beanToRow(data));
-      beans.unshift(rowToBean(inserted));
-      showToast("已儲存 ✓");
-    }
-    saveLocal(); closeFormModal(); render();
-  } catch(e) { showToast("儲存失敗："+e.message, true); }
-}
-
-/* ── Render cards ── */
-function render() {
+/* ══ Render beans ══ */
+function renderBeans() {
   document.getElementById("roastFilters").innerHTML = roastOptions.map(item=>`
-    <button class="pill ${roastFilter===item?"active":""}" onclick="roastFilter='${item}';render();">${item}</button>
-  `).join("");
-
-  const query    = document.getElementById("search").value.trim().toLowerCase();
-  const filtered = beans.filter(b => {
-    const text = [b.name,b.shop,b.origin,b.process,b.roast,b.brew,b.note,
-                  ...(b.flavorTypes||[]),...(b.flavorNotes||[])].join(" ").toLowerCase();
-    return (!query||text.includes(query)) && (roastFilter==="全部"||b.roast===roastFilter);
+    <button class="pill ${roastFilter===item?"active":""}" onclick="roastFilter='${item}';renderBeans();">${item}</button>`).join("");
+  const q = document.getElementById("beanSearch").value.trim().toLowerCase();
+  const filtered = beans.filter(b=>{
+    const text=[b.name,b.shop,b.origin,b.process,b.roast,b.brew,b.note,...(b.flavorTypes||[]),...(b.flavorNotes||[])].join(" ").toLowerCase();
+    return (!q||text.includes(q))&&(roastFilter==="全部"||b.roast===roastFilter);
   });
-
   if (!filtered.length) {
-    document.getElementById("cards").innerHTML = `
-      <div class="empty-state">
-        <div class="big">☕</div>
-        <p>${beans.length?"沒有符合的紀錄":"還沒有紀錄，按右上角「＋ 新增」開始吧！"}</p>
-      </div>`;
+    document.getElementById("beanCards").innerHTML=`<div class="empty-state"><div class="big">☕</div><p>${beans.length?"沒有符合的紀錄":"還沒有紀錄，按右上角「＋ 新增」開始吧！"}</p></div>`;
     return;
   }
-
-  document.getElementById("cards").innerHTML = filtered.map(b => {
-    const topTags = [...(b.flavorTypes||[]).slice(0,2), ...(b.flavorNotes||[]).slice(0,2)];
-    const priceStr = [
-      b.weight ? `${b.weight}${b.weightUnit||"g"}` : "",
-      b.price  ? `NT$${b.price}` : ""
-    ].filter(Boolean).join(" · ");
-
-    return `
-    <div class="card" onclick="openDetail(${b.id})">
+  document.getElementById("beanCards").innerHTML = filtered.map(b=>{
+    const priceStr=[b.weight?`${b.weight}${b.weightUnit||"g"}`:"",b.price?`NT$${b.price}`:""].filter(Boolean).join(" · ");
+    return `<div class="card" onclick="openBeanDetail(${b.id})">
       <div class="card-actions">
-        <button class="icon-btn edit"   onclick="event.stopPropagation();closeDetail();editBean(${b.id})"   title="編輯">✎</button>
+        <button class="icon-btn edit"   onclick="event.stopPropagation();editBean(${b.id})" title="編輯">✎</button>
         <button class="icon-btn delete" onclick="event.stopPropagation();deleteBean(${b.id})" title="刪除">✕</button>
       </div>
       <div class="card-name">${esc(b.name)}</div>
       <div class="card-sub">${esc(b.shop||"未填店家")}</div>
-      ${topTags.length ? `<div class="card-tags">
+      <div class="card-tags">
         ${(b.flavorTypes||[]).slice(0,2).map(i=>`<span class="card-tag">${esc(i)}</span>`).join("")}
         ${(b.flavorNotes||[]).slice(0,2).map(i=>`<span class="card-tag note"># ${esc(i)}</span>`).join("")}
-      </div>` : ""}
-      ${priceStr ? `<div class="card-price">${priceStr}</div>` : ""}
+      </div>
+      ${priceStr?`<div class="card-price">${priceStr}</div>`:""}
       <div class="card-footer">
         <span class="card-stars">${stars(b.rating)}</span>
-        <span class="card-roast">${esc(b.roast)}</span>
+        <span class="card-badge">${esc(b.roast)}</span>
       </div>
     </div>`;
   }).join("");
 }
 
-/* ── close modals on backdrop click ── */
-document.getElementById("detailModal").addEventListener("click", e => {
-  if (e.target === document.getElementById("detailModal")) closeDetail();
-});
-document.getElementById("formModal").addEventListener("click", e => {
-  if (e.target === document.getElementById("formModal")) closeFormModal();
-});
+/* ══ Render brews ══ */
+function renderBrews() {
+  const q = document.getElementById("brewSearch").value.trim().toLowerCase();
+  const filtered = brews.filter(b=>{
+    const text=[b.beanName,b.method,b.note,b.vsNote,b.equipment].join(" ").toLowerCase();
+    return !q||text.includes(q);
+  });
+  if (!filtered.length) {
+    document.getElementById("brewCards").innerHTML=`<div class="empty-state"><div class="big">🫗</div><p>${brews.length?"沒有符合的紀錄":"還沒有沖煮紀錄，按右上角「＋ 新增」開始吧！"}</p></div>`;
+    return;
+  }
+  document.getElementById("brewCards").innerHTML = filtered.map(b=>{
+    const params=[b.temp?`${b.temp}°C`:"",b.dose?`${b.dose}g`:"",b.grind?`刻度${b.grind}`:""].filter(Boolean).join(" · ");
+    return `<div class="card" onclick="openBrewDetail(${b.id})">
+      <div class="card-actions">
+        <button class="icon-btn edit"   onclick="event.stopPropagation();editBrew(${b.id})" title="編輯">✎</button>
+        <button class="icon-btn delete" onclick="event.stopPropagation();deleteBrew(${b.id})" title="刪除">✕</button>
+      </div>
+      <div class="card-name">${esc(b.beanName||"未填豆名")}</div>
+      <div class="card-sub">${esc(b.date)}${b.method?` · ${esc(b.method)}`:""}</div>
+      ${params?`<div class="card-params">${params}</div>`:""}
+      <div class="card-footer">
+        <span class="card-stars">${stars(b.rating)}</span>
+        ${b.method?`<span class="card-badge green">${esc(b.method)}</span>`:""}
+      </div>
+    </div>`;
+  }).join("");
+}
 
-/* ── 初始載入：從 Supabase 讀資料 ── */
-async function loadFromDB() {
+/* ══ Bean detail ══ */
+function openBeanDetail(id) {
+  const b = beans.find(x=>x.id===id); if(!b) return;
+  document.getElementById("dName").textContent = b.name;
+  document.getElementById("dSub").textContent  = `${b.date}｜${b.shop||"未填店家"}｜${b.roast} · ${b.brew}`;
+  const pp=[b.weight?`⚖ ${b.weight} ${b.weightUnit||"g"}`:"",b.price?`NT$${b.price}`:""].filter(Boolean);
+  document.getElementById("dPriceLine").innerHTML = pp.length?`<div class="muted" style="margin:5px 0;">${pp.join(" ／ ")}</div>`:"";
+  document.getElementById("dFlavorTypes").innerHTML=(b.flavorTypes||[]).map(i=>`<span class="type-tag">${esc(i)}</span>`).join("")||`<span class="muted">尚未填寫</span>`;
+  document.getElementById("dFlavorNotes").innerHTML=(b.flavorNotes||[]).map(i=>`<span class="white-tag"># ${esc(i)}</span>`).join("")||`<span class="muted">尚未填寫</span>`;
+  document.getElementById("dMeters").innerHTML=meter("酸度",b.acidity)+meter("甜感",b.sweetness)+meter("苦感",b.bitterness)+meter("厚實度",b.body)+meter("餘韻",b.aftertaste);
+  document.getElementById("dNote").textContent=b.note||"尚未填寫";
+  document.getElementById("dStars").textContent=stars(b.rating);
+  const rep=document.getElementById("dRepurchase"); rep.textContent=b.repurchase?"會回購":"暫不回購"; rep.className="repurchase"+(b.repurchase?"":" no");
+  document.getElementById("dEditBtn").onclick=()=>{closeBeanDetail();editBean(id);};
+  document.getElementById("dDeleteBtn").onclick=()=>deleteBean(id);
+  document.getElementById("beanDetailModal").classList.add("show");
+}
+function closeBeanDetail() { document.getElementById("beanDetailModal").classList.remove("show"); }
+
+/* ══ Brew detail ══ */
+function openBrewDetail(id) {
+  const b = brews.find(x=>x.id===id); if(!b) return;
+  document.getElementById("brDName").textContent = b.beanName||"未填豆名";
+  document.getElementById("brDSub").textContent  = `${b.date}${b.method?` · ${b.method}`:""}`;
+  document.getElementById("brDParams").innerHTML =
+    param("水溫",b.temp?b.temp+"°C":"")+param("粉量",b.dose?b.dose+"g":"")+
+    param("水量",b.water?b.water+"ml":"")+param("粉水比",b.ratio)+
+    param("研磨刻度",b.grind)+param("悶蒸",b.bloom?secsToMmss(b.bloom):"")+
+    param("總時間",b.brewTime?secsToMmss(b.brewTime):"");
+  document.getElementById("brDMeters").innerHTML=meter("酸度",b.acidity)+meter("甜感",b.sweetness)+meter("苦感",b.bitterness)+meter("厚實度",b.body)+meter("餘韻",b.aftertaste);
+  document.getElementById("brDNote").textContent=b.note||"尚未填寫";
+  document.getElementById("brDVs").textContent=b.vsNote||"尚未填寫";
+  document.getElementById("brDEq").textContent=b.equipment||"尚未填寫";
+  document.getElementById("brDStars").textContent=stars(b.rating);
+  document.getElementById("brDEditBtn").onclick=()=>{closeBrewDetail();editBrew(id);};
+  document.getElementById("brDDeleteBtn").onclick=()=>deleteBrew(id);
+  document.getElementById("brewDetailModal").classList.add("show");
+}
+function closeBrewDetail() { document.getElementById("brewDetailModal").classList.remove("show"); }
+
+/* ══ Bean form ══ */
+function openBeanForm() {
+  editingBeanId=null;
+  document.getElementById("beanModalTitle").textContent="新增咖啡豆紀錄";
+  selectedFlavorTypes=new Set(); selectedFlavorNotes=[];
+  ["bName","bShop","bOrigin","bProcess","flavorInput","bNote","bWeight","bPrice"].forEach(i=>document.getElementById(i).value="");
+  document.getElementById("bWeightUnit").value="g"; document.getElementById("bRoast").value="中焙"; document.getElementById("bBrew").value="手沖"; document.getElementById("bRating").value="4"; document.getElementById("bRepurchase").checked=false;
+  [["bAcidity","acidityText","3"],["bSweetness","sweetnessText","3"],["bBody","bodyText","3"],["bAftertaste","aftertasteText","3"],["bBitterness","bitternessText","2"]].forEach(([i,l,v])=>{document.getElementById(i).value=v;document.getElementById(l).textContent=v+"/5";});
+  renderFlavorTypePicker(); renderFlavorNotes();
+  document.getElementById("beanFormModal").classList.add("show");
+}
+function closeBeanForm() { document.getElementById("beanFormModal").classList.remove("show"); editingBeanId=null; }
+
+function editBean(id) {
+  const b=beans.find(x=>x.id===id); if(!b) return;
+  editingBeanId=id; document.getElementById("beanModalTitle").textContent="編輯咖啡豆紀錄";
+  document.getElementById("bName").value=b.name||""; document.getElementById("bShop").value=b.shop||"";
+  document.getElementById("bWeight").value=b.weight||""; document.getElementById("bWeightUnit").value=b.weightUnit||"g";
+  document.getElementById("bPrice").value=b.price||""; document.getElementById("bOrigin").value=b.origin||"";
+  document.getElementById("bProcess").value=b.process||""; document.getElementById("bRoast").value=b.roast||"中焙";
+  document.getElementById("bBrew").value=b.brew||"手沖"; document.getElementById("bNote").value=b.note||"";
+  document.getElementById("bRating").value=b.rating||"4"; document.getElementById("bRepurchase").checked=!!b.repurchase;
+  selectedFlavorTypes=new Set(b.flavorTypes||[]); selectedFlavorNotes=[...(b.flavorNotes||[])];
+  [["bAcidity","acidityText",b.acidity],["bSweetness","sweetnessText",b.sweetness],["bBitterness","bitternessText",b.bitterness],["bBody","bodyText",b.body],["bAftertaste","aftertasteText",b.aftertaste]].forEach(([i,l,v])=>{document.getElementById(i).value=v??3;document.getElementById(l).textContent=(v??3)+"/5";});
+  document.getElementById("flavorInput").value="";
+  renderFlavorTypePicker(); renderFlavorNotes();
+  document.getElementById("beanFormModal").classList.add("show");
+}
+
+async function saveBean() {
+  const name=document.getElementById("bName").value.trim(); if(!name){alert("請先填咖啡豆名稱");return;}
+  const data={
+    date: editingBeanId?(beans.find(b=>b.id===editingBeanId)?.date||today()):today(), name,
+    shop:document.getElementById("bShop").value.trim(),
+    weight:document.getElementById("bWeight").value?Number(document.getElementById("bWeight").value):null,
+    weightUnit:document.getElementById("bWeightUnit").value,
+    price:document.getElementById("bPrice").value?Number(document.getElementById("bPrice").value):null,
+    origin:document.getElementById("bOrigin").value.trim(), process:document.getElementById("bProcess").value.trim(),
+    roast:document.getElementById("bRoast").value, brew:document.getElementById("bBrew").value,
+    flavorTypes:Array.from(selectedFlavorTypes), flavorNotes:[...selectedFlavorNotes],
+    acidity:Number(document.getElementById("bAcidity").value), sweetness:Number(document.getElementById("bSweetness").value),
+    bitterness:Number(document.getElementById("bBitterness").value), body:Number(document.getElementById("bBody").value),
+    aftertaste:Number(document.getElementById("bAftertaste").value),
+    note:document.getElementById("bNote").value.trim(), rating:Number(document.getElementById("bRating").value),
+    repurchase:document.getElementById("bRepurchase").checked
+  };
+  try {
+    if (editingBeanId) {
+      const u=await dbUpdate("beans",editingBeanId,beanToRow(data));
+      const idx=beans.findIndex(b=>b.id===editingBeanId);
+      if(idx!==-1) beans[idx]=rowToBean(u||{id:editingBeanId,...beanToRow(data)});
+      showToast("已更新 ✓");
+    } else {
+      const ins=await dbInsert("beans",beanToRow(data));
+      beans.unshift(rowToBean(ins));
+      showToast("已儲存 ✓");
+    }
+    closeBeanForm(); renderBeans();
+  } catch(e) { showToast("儲存失敗："+e.message,true); }
+}
+
+async function deleteBean(id) {
+  const b=beans.find(x=>x.id===id); if(!b) return;
+  if(!confirm(`刪除「${b.name}」？`)) return;
+  try { await dbDelete("beans",id); beans=beans.filter(x=>x.id!==id); closeBeanDetail(); renderBeans(); showToast("已刪除 ✓"); }
+  catch(e) { showToast("刪除失敗",true); }
+}
+
+/* ══ Brew form ══ */
+function openBrewForm() {
+  editingBrewId=null; document.getElementById("brewModalTitle").textContent="新增沖煮紀錄";
+  ["brBeanInput","brTemp","brDose","brWater","brGrind","brBloom","brBrewTime","brNote","brVs","brEquip"].forEach(i=>document.getElementById(i).value="");
+  document.getElementById("brRatio").value="1:15"; document.getElementById("brMethod").value="手沖"; document.getElementById("brRating").value="4";
+  [["brAcidity","brAcidityText","3"],["brSweetness","brSweetnessText","3"],["brBody","brBodyText","3"],["brAftertaste","brAftertasteText","3"],["brBitterness","brBitternessText","2"]].forEach(([i,l,v])=>{document.getElementById(i).value=v;document.getElementById(l).textContent=v+"/5";});
+  document.getElementById("brewFormModal").classList.add("show");
+}
+function closeBrewForm() { document.getElementById("brewFormModal").classList.remove("show"); editingBrewId=null; }
+
+function editBrew(id) {
+  const b=brews.find(x=>x.id===id); if(!b) return;
+  editingBrewId=id; document.getElementById("brewModalTitle").textContent="編輯沖煮紀錄";
+  document.getElementById("brBeanInput").value=b.beanName||""; document.getElementById("brMethod").value=b.method||"手沖";
+  document.getElementById("brTemp").value=b.temp||""; document.getElementById("brDose").value=b.dose||"";
+  document.getElementById("brWater").value=b.water||""; document.getElementById("brRatio").value=b.ratio||"1:15";
+  document.getElementById("brGrind").value=b.grind||"";
+  document.getElementById("brBloom").value=b.bloom?secsToMmss(b.bloom):"";
+  document.getElementById("brBrewTime").value=b.brewTime?secsToMmss(b.brewTime):"";
+  document.getElementById("brNote").value=b.note||""; document.getElementById("brVs").value=b.vsNote||"";
+  document.getElementById("brEquip").value=b.equipment||""; document.getElementById("brRating").value=b.rating||"4";
+  [["brAcidity","brAcidityText",b.acidity],["brSweetness","brSweetnessText",b.sweetness],["brBitterness","brBitternessText",b.bitterness],["brBody","brBodyText",b.body],["brAftertaste","brAftertasteText",b.aftertaste]].forEach(([i,l,v])=>{document.getElementById(i).value=v??3;document.getElementById(l).textContent=(v??3)+"/5";});
+  document.getElementById("brewFormModal").classList.add("show");
+}
+
+async function saveBrew() {
+  const data={
+    date:editingBrewId?(brews.find(b=>b.id===editingBrewId)?.date||today()):today(),
+    beanName:document.getElementById("brBeanInput").value.trim()||null,
+    method:document.getElementById("brMethod").value,
+    temp:document.getElementById("brTemp").value?Number(document.getElementById("brTemp").value):null,
+    dose:document.getElementById("brDose").value?Number(document.getElementById("brDose").value):null,
+    water:document.getElementById("brWater").value?Number(document.getElementById("brWater").value):null,
+    ratio:document.getElementById("brRatio").value,
+    grind:document.getElementById("brGrind").value?Number(document.getElementById("brGrind").value):null,
+    bloom:mmssToSecs(document.getElementById("brBloom").value),
+    brewTime:mmssToSecs(document.getElementById("brBrewTime").value),
+    acidity:Number(document.getElementById("brAcidity").value), sweetness:Number(document.getElementById("brSweetness").value),
+    bitterness:Number(document.getElementById("brBitterness").value), body:Number(document.getElementById("brBody").value),
+    aftertaste:Number(document.getElementById("brAftertaste").value),
+    note:document.getElementById("brNote").value.trim()||null,
+    vsNote:document.getElementById("brVs").value.trim()||null,
+    equipment:document.getElementById("brEquip").value.trim()||null,
+    rating:Number(document.getElementById("brRating").value)
+  };
+  try {
+    if (editingBrewId) {
+      const u=await dbUpdate("brews",editingBrewId,brewToRow(data));
+      const idx=brews.findIndex(b=>b.id===editingBrewId);
+      if(idx!==-1) brews[idx]=rowToBrew(u||{id:editingBrewId,...brewToRow(data)});
+      showToast("已更新 ✓");
+    } else {
+      const ins=await dbInsert("brews",brewToRow(data));
+      brews.unshift(rowToBrew(ins));
+      showToast("已儲存 ✓");
+    }
+    closeBrewForm(); renderBrews();
+  } catch(e) { showToast("儲存失敗："+e.message,true); }
+}
+
+async function deleteBrew(id) {
+  if(!confirm("刪除這筆沖煮紀錄？")) return;
+  try { await dbDelete("brews",id); brews=brews.filter(x=>x.id!==id); closeBrewDetail(); renderBrews(); showToast("已刪除 ✓"); }
+  catch(e) { showToast("刪除失敗",true); }
+}
+
+/* ══ Flavor pickers ══ */
+function renderFlavorTypePicker() {
+  document.getElementById("flavorTypePicker").innerHTML=flavorTypes.map(item=>`<button class="pill ${selectedFlavorTypes.has(item)?"active":""}" onclick="toggleFlavorType('${item}')">${item}</button>`).join("");
+}
+function toggleFlavorType(item) { selectedFlavorTypes.has(item)?selectedFlavorTypes.delete(item):selectedFlavorTypes.add(item); renderFlavorTypePicker(); }
+function handleFlavorKey(e) { if(e.key==="Enter"){e.preventDefault();addFlavorNote();} }
+function addFlavorNote() {
+  const input=document.getElementById("flavorInput"); const value=input.value.trim();
+  if(!value||selectedFlavorNotes.includes(value)) return;
+  selectedFlavorNotes.push(value); input.value=""; renderFlavorNotes();
+}
+function removeFlavorNote(i) { selectedFlavorNotes.splice(i,1); renderFlavorNotes(); }
+function renderFlavorNotes() {
+  document.getElementById("flavorNoteTags").innerHTML=selectedFlavorNotes.map((item,i)=>`<button class="white-tag" onclick="removeFlavorNote(${i})"># ${esc(item)} ×</button>`).join("");
+}
+
+/* ══ Export ══ */
+function download(filename,content,mimeType) {
+  const blob=new Blob([content],{type:mimeType}); const url=URL.createObjectURL(blob);
+  const a=Object.assign(document.createElement("a"),{href:url,download:filename});
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+
+
+function backupJSON() {
+  if(!beans.length&&!brews.length){showToast("目前沒有資料",true);return;}
+  download(`咖啡紀錄備份_${today()}.json`,JSON.stringify({beans,brews},null,2),"application/json");
+  showToast("已備份 ✓");
+}
+function restoreJSON(event) {
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try {
+      const data=JSON.parse(e.target.result);
+      const bArr=data.beans||data; const brArr=data.brews||[];
+      if(!Array.isArray(bArr)) throw new Error();
+      if(!confirm(`確定還原？將匯入豆子 ${bArr.length} 筆、沖煮 ${brArr.length} 筆。`)) return;
+      showToast("上傳中…");
+      for(const b of bArr) await dbInsert("beans",beanToRow(b));
+      for(const b of brArr) await dbInsert("brews",brewToRow(b));
+      await loadAll();
+      showToast("還原完成 ✓");
+    } catch(e) { showToast("還原失敗："+e.message,true); }
+    event.target.value="";
+  };
+  reader.readAsText(file);
+}
+
+/* ══ Load ══ */
+async function loadAll() {
   showToast("載入中…");
   try {
-    const rows = await dbFetch();
-    beans = rows.map(rowToBean);
-    saveLocal();
-    render();
+    const [bRows,brRows]=await Promise.all([dbQ("beans","?order=created_at.desc"),dbQ("brews","?order=created_at.desc")]);
+    beans=bRows.map(rowToBean); brews=brRows.map(rowToBrew);
+    localStorage.setItem("coffeeBeansV2",JSON.stringify(beans));
     document.getElementById("toast").classList.remove("show");
+    renderBeans(); renderBrews();
   } catch(e) {
-    // 網路失敗時從 localStorage 讀快取
-    beans = JSON.parse(localStorage.getItem("coffeeBeansV2")) || [];
-    render();
-    showToast("無法連線，顯示本地快取", true);
+    beans=JSON.parse(localStorage.getItem("coffeeBeansV2"))||[];
+    renderBeans(); renderBrews();
+    showToast("無法連線，顯示本地快取",true);
   }
 }
 
-loadFromDB();
+/* ══ Modal backdrop close ══ */
+["beanDetailModal","beanFormModal","brewDetailModal","brewFormModal"].forEach(id=>{
+  document.getElementById(id).addEventListener("click",e=>{
+    if(e.target===document.getElementById(id)) document.getElementById(id).classList.remove("show");
+  });
+});
+
+updateHero();
+loadAll();
 </script>
 </body>
 </html>
