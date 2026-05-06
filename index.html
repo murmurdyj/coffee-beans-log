@@ -148,6 +148,22 @@
 
     #restoreInput { display: none; }
 
+    /* ── month groups ── */
+    .month-group { margin-bottom: 24px; }
+    .month-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 4px; cursor: pointer; user-select: none;
+      border-radius: 14px; transition: background .12s;
+    }
+    .month-header:hover { background: rgba(255,255,255,.5); }
+    .month-label { font-size: 15px; font-weight: 1000; color: #5B341F; }
+    .month-count { font-size: 12px; color: #A8866B; font-weight: 900;
+      background: #F4E3D0; border-radius: 999px; padding: 3px 9px; }
+    .month-chevron { margin-left: auto; font-size: 13px; color: #A8866B; transition: transform .2s; }
+    .month-chevron.open { transform: rotate(180deg); }
+    .month-body { display: none; }
+    .month-body.open { display: block; }
+
     @media (max-width: 640px) {
       .wrap { padding: 12px; }
       .hero { padding: 18px 20px; border-radius: 22px; }
@@ -315,17 +331,20 @@
       <button class="close" onclick="closeBrewForm()">×</button>
     </div>
 
-    <!-- bean search -->
+    <!-- date + bean search -->
     <div class="form-grid" style="margin-bottom:12px;">
+      <label><span>日期</span><input id="brDate" type="date"></label>
+      <label><span>沖煮方式</span>
+        <select id="brMethod"><option>手沖</option><option>義式</option><option>愛樂壓</option><option>冰滴</option><option>法壓</option><option>摩卡壺</option></select>
+      </label>
+    </div>
+    <div style="margin-bottom:12px;">
       <label>
         <span>咖啡豆（搜尋選擇）</span>
         <div class="bean-search-wrap">
           <input id="brBeanInput" placeholder="輸入豆名關鍵字…" oninput="searchBeans()" onblur="hideBeanDropdown()" autocomplete="off">
           <div class="bean-dropdown" id="beanDropdown"></div>
         </div>
-      </label>
-      <label><span>沖煮方式</span>
-        <select id="brMethod"><option>手沖</option><option>義式</option><option>愛樂壓</option><option>冰滴</option><option>法壓</option><option>摩卡壺</option></select>
       </label>
     </div>
 
@@ -564,6 +583,32 @@ function renderBeans() {
 }
 
 /* ══ Render brews ══ */
+// track which months are open (default: latest month open)
+const openMonths = new Set();
+
+function brewCard(b) {
+  const params=[b.temp?`${b.temp}°C`:"",b.dose?`${b.dose}g`:"",b.grind?`刻度${b.grind}`:""].filter(Boolean).join(" · ");
+  return `<div class="card" onclick="openBrewDetail(${b.id})">
+    <div class="card-actions">
+      <button class="icon-btn edit"   onclick="event.stopPropagation();editBrew(${b.id})" title="編輯">✎</button>
+      <button class="icon-btn delete" onclick="event.stopPropagation();deleteBrew(${b.id})" title="刪除">✕</button>
+    </div>
+    <div class="card-name">${esc(b.beanName||"未填豆名")}</div>
+    <div class="card-sub">${esc(b.date)}${b.method?` · ${esc(b.method)}`:""}</div>
+    ${params?`<div class="card-params">${params}</div>`:""}
+    <div class="card-footer">
+      <span class="card-stars">${stars(b.rating)}</span>
+      ${b.method?`<span class="card-badge green">${esc(b.method)}</span>`:""}
+    </div>
+  </div>`;
+}
+
+function toggleMonth(key) {
+  if(openMonths.has(key)) openMonths.delete(key);
+  else openMonths.add(key);
+  renderBrews();
+}
+
 function renderBrews() {
   const q = document.getElementById("brewSearch").value.trim().toLowerCase();
   const filtered = brews.filter(b=>{
@@ -574,19 +619,32 @@ function renderBrews() {
     document.getElementById("brewCards").innerHTML=`<div class="empty-state"><div class="big">🫗</div><p>${brews.length?"沒有符合的紀錄":"還沒有沖煮紀錄，按右上角「＋ 新增」開始吧！"}</p></div>`;
     return;
   }
-  document.getElementById("brewCards").innerHTML = filtered.map(b=>{
-    const params=[b.temp?`${b.temp}°C`:"",b.dose?`${b.dose}g`:"",b.grind?`刻度${b.grind}`:""].filter(Boolean).join(" · ");
-    return `<div class="card" onclick="openBrewDetail(${b.id})">
-      <div class="card-actions">
-        <button class="icon-btn edit"   onclick="event.stopPropagation();editBrew(${b.id})" title="編輯">✎</button>
-        <button class="icon-btn delete" onclick="event.stopPropagation();deleteBrew(${b.id})" title="刪除">✕</button>
+
+  // group by YYYY-MM
+  const groups = {};
+  filtered.forEach(b=>{
+    const key = (b.date||"").slice(0,7) || "未知日期";
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(b);
+  });
+  const sortedKeys = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+
+  // auto-open latest month if nothing is open yet
+  if(openMonths.size===0 && sortedKeys.length) openMonths.add(sortedKeys[0]);
+
+  document.getElementById("brewCards").innerHTML = sortedKeys.map(key=>{
+    const isOpen = openMonths.has(key);
+    const [yr,mo] = key.split("-");
+    const label = yr&&mo ? `${yr}年${parseInt(mo)}月` : key;
+    const count = groups[key].length;
+    return `<div class="month-group">
+      <div class="month-header" onclick="toggleMonth('${key}')">
+        <span class="month-label">${label}</span>
+        <span class="month-count">${count} 筆</span>
+        <span class="month-chevron ${isOpen?"open":""}">▼</span>
       </div>
-      <div class="card-name">${esc(b.beanName||"未填豆名")}</div>
-      <div class="card-sub">${esc(b.date)}${b.method?` · ${esc(b.method)}`:""}</div>
-      ${params?`<div class="card-params">${params}</div>`:""}
-      <div class="card-footer">
-        <span class="card-stars">${stars(b.rating)}</span>
-        ${b.method?`<span class="card-badge green">${esc(b.method)}</span>`:""}
+      <div class="month-body ${isOpen?"open":""}">
+        <div class="grid">${groups[key].map(brewCard).join("")}</div>
       </div>
     </div>`;
   }).join("");
@@ -704,6 +762,7 @@ async function deleteBean(id) {
 function openBrewForm() {
   editingBrewId=null; document.getElementById("brewModalTitle").textContent="新增沖煮紀錄";
   ["brBeanInput","brTemp","brDose","brWater","brGrind","brBloom","brBrewTime","brNote","brVs","brEquip"].forEach(i=>document.getElementById(i).value="");
+  document.getElementById("brDate").value=today();
   document.getElementById("brRatio").value="1:15"; document.getElementById("brMethod").value="手沖"; document.getElementById("brRating").value="4";
   [["brAcidity","brAcidityText","3"],["brSweetness","brSweetnessText","3"],["brBody","brBodyText","3"],["brAftertaste","brAftertasteText","3"],["brBitterness","brBitternessText","2"]].forEach(([i,l,v])=>{document.getElementById(i).value=v;document.getElementById(l).textContent=v+"/5";});
   document.getElementById("brewFormModal").classList.add("show");
@@ -713,6 +772,7 @@ function closeBrewForm() { document.getElementById("brewFormModal").classList.re
 function editBrew(id) {
   const b=brews.find(x=>x.id===id); if(!b) return;
   editingBrewId=id; document.getElementById("brewModalTitle").textContent="編輯沖煮紀錄";
+  document.getElementById("brDate").value=b.date||today();
   document.getElementById("brBeanInput").value=b.beanName||""; document.getElementById("brMethod").value=b.method||"手沖";
   document.getElementById("brTemp").value=b.temp||""; document.getElementById("brDose").value=b.dose||"";
   document.getElementById("brWater").value=b.water||""; document.getElementById("brRatio").value=b.ratio||"1:15";
@@ -727,7 +787,7 @@ function editBrew(id) {
 
 async function saveBrew() {
   const data={
-    date:editingBrewId?(brews.find(b=>b.id===editingBrewId)?.date||today()):today(),
+    date:document.getElementById("brDate").value||today(),
     beanName:document.getElementById("brBeanInput").value.trim()||null,
     method:document.getElementById("brMethod").value,
     temp:document.getElementById("brTemp").value?Number(document.getElementById("brTemp").value):null,
