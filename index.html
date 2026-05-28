@@ -880,7 +880,7 @@ function restoreJSON(event) {
 async function loadAll() {
   showToast("載入中…");
   try {
-    const [bRows,brRows]=await Promise.all([dbQ("beans","?order=created_at.desc"),dbQ("brews","?order=created_at.desc")]);
+    const [bRows,brRows]=await Promise.all([dbQ("beans","?order=id.desc"),dbQ("brews","?order=id.desc")]);
     beans=bRows.map(rowToBean); brews=brRows.map(rowToBrew);
     localStorage.setItem("coffeeBeansV2",JSON.stringify(beans));
     document.getElementById("toast").classList.remove("show");
