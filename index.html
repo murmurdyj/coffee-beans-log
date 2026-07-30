@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coffee &amp; Wine Log</title>
+  <title>Coffee &amp; Wine</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -204,7 +204,7 @@
     <div class="hero-inner">
       <div>
         <div class="eyebrow" id="heroEyebrow">☕ 咖啡豆風味筆記</div>
-        <h1>Coffee Log</h1>
+        <h1>Coffee &amp; Wine</h1>
         <p id="heroDesc">紀錄豆子風味、沖煮參數，跨裝置同步。</p>
       </div>
       <div class="hero-actions" id="heroActions"></div>
@@ -340,15 +340,8 @@
       <div><div class="detail-title" id="brDName"></div><div class="detail-sub" id="brDSub"></div></div>
       <button class="close" onclick="closeBrewDetail()">×</button>
     </div>
-    <div class="section-box params">
-      <div class="section-title">⚗️ 沖煮參數</div>
-      <div class="params-grid" id="brDParams"></div>
-    </div>
-    <div id="brDMeters"></div>
-    <div class="note-box" id="brDNoteBox"><strong style="font-size:12px;">品飲感受</strong><p id="brDNote"></p></div>
-    <div class="note-box" style="margin-top:8px;" id="brDVsBox"><strong style="font-size:12px;">跟之前比</strong><p id="brDVs"></p></div>
-    <div class="note-box" style="margin-top:8px;" id="brDEqBox"><strong style="font-size:12px;">器材備註</strong><p id="brDEq"></p></div>
-    <div class="detail-footer">
+    <div class="note-box"><strong style="font-size:12px;">📝 備忘錄</strong><p id="brDNote" style="white-space:pre-wrap;"></p></div>
+    <div class="detail-footer" style="margin-top:14px;">
       <div><div class="muted" style="font-size:11px;font-weight:900;margin-bottom:2px;">整體評分</div><span class="stars" id="brDStars"></span></div>
     </div>
     <div class="detail-actions">
@@ -360,13 +353,11 @@
 
 <!-- ══ BREW FORM modal ══ -->
 <div class="modal" id="brewFormModal">
-  <div class="form-inner">
+  <div class="form-inner" style="max-width:500px;">
     <div class="modal-head">
       <h2 id="brewModalTitle" style="font-size:18px;">新增沖煮紀錄</h2>
       <button class="close" onclick="closeBrewForm()">×</button>
     </div>
-
-    <!-- date + bean search -->
     <div class="form-grid" style="margin-bottom:12px;">
       <label><span>日期</span><input id="brDate" type="date"></label>
       <label><span>沖煮方式</span>
@@ -382,40 +373,14 @@
         </div>
       </label>
     </div>
-
-    <!-- params -->
-    <div class="form-section params">
-      <div class="section-title" style="margin-bottom:10px;">⚗️ 沖煮參數</div>
-      <div class="form-grid-3">
-        <label><span>水溫（°C）</span><input id="brTemp" type="number" min="60" max="100" placeholder="92"></label>
-        <label><span>粉量（g）</span><input id="brDose" type="number" min="0" step="0.1" placeholder="15" oninput="calcWater()"></label>
-        <label><span>水量（ml）</span><input id="brWater" type="number" min="0" placeholder="225" oninput="calcRatio()"></label>
-        <label><span>粉水比</span><input id="brRatio" placeholder="1:15" oninput="calcWaterFromRatio()"></label>
-        <label><span>研磨刻度</span><input id="brGrind" type="number" step="0.5" placeholder="3.5"></label>
-        <label><span>悶蒸時間</span><input id="brBloom" placeholder="0:30" oninput="formatTime(this)"></label>
-      </div>
-      <div class="form-grid" style="margin-top:10px;">
-        <label><span>總沖煮時間</span><input id="brBrewTime" placeholder="2:30" oninput="formatTime(this)"></label>
-      </div>
-    </div>
-
-    <!-- taste -->
-    <div class="range-grid" style="margin-top:14px;">
-      <label><span>酸度 <b id="brAcidityText">3/5</b></span><input id="brAcidity" type="range" min="1" max="5" value="3" oninput="syncRange('brAcidity','brAcidityText')"></label>
-      <label><span>甜感 <b id="brSweetnessText">3/5</b></span><input id="brSweetness" type="range" min="1" max="5" value="3" oninput="syncRange('brSweetness','brSweetnessText')"></label>
-      <label><span>苦感 <b id="brBitternessText">2/5</b></span><input id="brBitterness" type="range" min="1" max="5" value="2" oninput="syncRange('brBitterness','brBitternessText')"></label>
-      <label><span>厚實度 <b id="brBodyText">3/5</b></span><input id="brBody" type="range" min="1" max="5" value="3" oninput="syncRange('brBody','brBodyText')"></label>
-      <label><span>餘韻 <b id="brAftertasteText">3/5</b></span><input id="brAftertaste" type="range" min="1" max="5" value="3" oninput="syncRange('brAftertaste','brAftertasteText')"></label>
-    </div>
-
-    <div class="form-grid" style="margin-top:12px;">
-      <label><span>品飲感受</span><textarea id="brNote" placeholder="今天喝起來怎麼樣？"></textarea></label>
-      <label><span>跟之前比</span><textarea id="brVs" placeholder="比上次酸一點、水溫降5度好很多…"></textarea></label>
-    </div>
-    <label style="display:block;margin-top:12px;"><span>器材備註</span><input id="brEquip" placeholder="Fellow ODE、Stagg X…"></label>
-
+    <label style="display:block;margin-bottom:12px;">
+      <span>備忘錄（自由填寫）</span>
+      <textarea id="brNote" placeholder="水溫 92°C、粉水比 1:15、今天偏酸想再調整研磨…什麼都可以記" style="min-height:140px;"></textarea>
+    </label>
     <div class="form-actions">
-      <div><span style="display:block;margin-bottom:4px;font-size:12px;font-weight:1000;">整體評分</span><select id="brRating" style="width:76px;"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option></select></div>
+      <div><span style="display:block;margin-bottom:4px;font-size:12px;font-weight:1000;">整體評分</span>
+        <select id="brRating" style="width:76px;"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option></select>
+      </div>
       <button class="btn" onclick="saveBrew()">儲存紀錄</button>
     </div>
   </div>
@@ -471,7 +436,7 @@
       <label><span>酒名</span><input id="wName" placeholder="例：Château Margaux"></label>
       <label><span>品牌 / 酒莊 / 酒廠</span><input id="wBrand" placeholder="例：Margaux"></label>
       <label><span>開瓶日期</span><input id="wOpenDate" type="date"></label>
-      <label><span>容量（ml）</span><input id="wVolume" type="number" placeholder="750"></label>
+      <label><span>容量</span><select id="wVolume"><option value="">選擇容量</option><option value="187">187ml</option><option value="375">375ml</option><option value="500">500ml</option><option value="750">750ml（標準瓶）</option><option value="1000">1L</option><option value="1500">1.5L</option></select></label>
       <label><span>價錢（元）</span><input id="wPrice" type="number" placeholder="1200"></label>
       <label><span>購買地點</span><input id="wPurchasePlace" placeholder="例：誠品酒窖"></label>
     </div>
@@ -718,7 +683,6 @@ function renderBeans() {
 const openMonths = new Set();
 
 function brewCard(b) {
-  const params=[b.temp?`${b.temp}°C`:"",b.dose?`${b.dose}g`:"",b.grind?`刻度${b.grind}`:""].filter(Boolean).join(" · ");
   return `<div class="card" onclick="openBrewDetail(${b.id})">
     <div class="card-actions">
       <button class="icon-btn edit"   onclick="event.stopPropagation();editBrew(${b.id})" title="編輯">✎</button>
@@ -726,7 +690,7 @@ function brewCard(b) {
     </div>
     <div class="card-name">${esc(b.beanName||"未填豆名")}</div>
     <div class="card-sub">${esc(b.date)}${b.method?` · ${esc(b.method)}`:""}</div>
-    ${params?`<div class="card-params">${params}</div>`:""}
+    ${b.note?`<div class="card-params" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:6px;">${esc(b.note)}</div>`:""}
     <div class="card-footer">
       <span class="card-stars">${stars(b.rating)}</span>
       ${b.method?`<span class="card-badge green">${esc(b.method)}</span>`:""}
@@ -734,10 +698,20 @@ function brewCard(b) {
   </div>`;
 }
 
-function toggleMonth(key) {
+function toggleMonth(el) {
+  const key = el.dataset.key;
   if(openMonths.has(key)) openMonths.delete(key);
   else openMonths.add(key);
-  renderBrews();
+  // toggle directly without full re-render for snappier feel
+  const body = el.nextElementSibling;
+  const chevron = el.querySelector(".month-chevron");
+  if(openMonths.has(key)) {
+    body.classList.add("open");
+    chevron.classList.add("open");
+  } else {
+    body.classList.remove("open");
+    chevron.classList.remove("open");
+  }
 }
 
 function renderBrews() {
@@ -769,7 +743,7 @@ function renderBrews() {
     const label = yr&&mo ? `${yr}年${parseInt(mo)}月` : key;
     const count = groups[key].length;
     return `<div class="month-group">
-      <div class="month-header" onclick="toggleMonth('${key}')">
+      <div class="month-header" onclick="toggleMonth(this)" data-key="${key}">
         <span class="month-label">${label}</span>
         <span class="month-count">${count} 筆</span>
         <span class="month-chevron ${isOpen?"open":""}">▼</span>
@@ -801,19 +775,11 @@ function openBeanDetail(id) {
 function closeBeanDetail() { document.getElementById("beanDetailModal").classList.remove("show"); }
 
 /* ══ Brew detail ══ */
-function openBrewDetail(id) {
-  const b = brews.find(x=>x.id===id); if(!b) return;
-  document.getElementById("brDName").textContent = b.beanName||"未填豆名";
-  document.getElementById("brDSub").textContent  = `${b.date}${b.method?` · ${b.method}`:""}`;
-  document.getElementById("brDParams").innerHTML =
-    param("水溫",b.temp?b.temp+"°C":"")+param("粉量",b.dose?b.dose+"g":"")+
-    param("水量",b.water?b.water+"ml":"")+param("粉水比",b.ratio)+
-    param("研磨刻度",b.grind)+param("悶蒸",b.bloom?secsToMmss(b.bloom):"")+
-    param("總時間",b.brewTime?secsToMmss(b.brewTime):"");
-  document.getElementById("brDMeters").innerHTML=meter("酸度",b.acidity)+meter("甜感",b.sweetness)+meter("苦感",b.bitterness)+meter("厚實度",b.body)+meter("餘韻",b.aftertaste);
+function openBrewDetail(id){
+  const b=brews.find(x=>x.id===id);if(!b)return;
+  document.getElementById("brDName").textContent=b.beanName||"未填豆名";
+  document.getElementById("brDSub").textContent=`${b.date}${b.method?" · "+b.method:""}`;
   document.getElementById("brDNote").textContent=b.note||"尚未填寫";
-  document.getElementById("brDVs").textContent=b.vsNote||"尚未填寫";
-  document.getElementById("brDEq").textContent=b.equipment||"尚未填寫";
   document.getElementById("brDStars").textContent=stars(b.rating);
   document.getElementById("brDEditBtn").onclick=()=>{closeBrewDetail();editBrew(id);};
   document.getElementById("brDDeleteBtn").onclick=()=>deleteBrew(id);
@@ -890,65 +856,44 @@ async function deleteBean(id) {
 }
 
 /* ══ Brew form ══ */
-function openBrewForm() {
-  editingBrewId=null; document.getElementById("brewModalTitle").textContent="新增沖煮紀錄";
-  ["brBeanInput","brTemp","brDose","brWater","brGrind","brBloom","brBrewTime","brNote","brVs","brEquip"].forEach(i=>document.getElementById(i).value="");
+function openBrewForm(){
+  editingBrewId=null;document.getElementById("brewModalTitle").textContent="新增沖煮紀錄";
+  document.getElementById("brBeanInput").value="";
+  document.getElementById("brNote").value="";
   document.getElementById("brDate").value=today();
-  document.getElementById("brRatio").value="1:15"; document.getElementById("brMethod").value="手沖"; document.getElementById("brRating").value="4";
-  [["brAcidity","brAcidityText","3"],["brSweetness","brSweetnessText","3"],["brBody","brBodyText","3"],["brAftertaste","brAftertasteText","3"],["brBitterness","brBitternessText","2"]].forEach(([i,l,v])=>{document.getElementById(i).value=v;document.getElementById(l).textContent=v+"/5";});
+  document.getElementById("brMethod").value="手沖";
+  document.getElementById("brRating").value="4";
   document.getElementById("brewFormModal").classList.add("show");
 }
 function closeBrewForm() { document.getElementById("brewFormModal").classList.remove("show"); editingBrewId=null; }
 
-function editBrew(id) {
-  const b=brews.find(x=>x.id===id); if(!b) return;
-  editingBrewId=id; document.getElementById("brewModalTitle").textContent="編輯沖煮紀錄";
+function editBrew(id){
+  const b=brews.find(x=>x.id===id);if(!b)return;
+  editingBrewId=id;document.getElementById("brewModalTitle").textContent="編輯沖煮紀錄";
   document.getElementById("brDate").value=b.date||today();
-  document.getElementById("brBeanInput").value=b.beanName||""; document.getElementById("brMethod").value=b.method||"手沖";
-  document.getElementById("brTemp").value=b.temp||""; document.getElementById("brDose").value=b.dose||"";
-  document.getElementById("brWater").value=b.water||""; document.getElementById("brRatio").value=b.ratio||"1:15";
-  document.getElementById("brGrind").value=b.grind||"";
-  document.getElementById("brBloom").value=b.bloom?secsToMmss(b.bloom):"";
-  document.getElementById("brBrewTime").value=b.brewTime?secsToMmss(b.brewTime):"";
-  document.getElementById("brNote").value=b.note||""; document.getElementById("brVs").value=b.vsNote||"";
-  document.getElementById("brEquip").value=b.equipment||""; document.getElementById("brRating").value=b.rating||"4";
-  [["brAcidity","brAcidityText",b.acidity],["brSweetness","brSweetnessText",b.sweetness],["brBitterness","brBitternessText",b.bitterness],["brBody","brBodyText",b.body],["brAftertaste","brAftertasteText",b.aftertaste]].forEach(([i,l,v])=>{document.getElementById(i).value=v??3;document.getElementById(l).textContent=(v??3)+"/5";});
+  document.getElementById("brBeanInput").value=b.beanName||"";
+  document.getElementById("brMethod").value=b.method||"手沖";
+  document.getElementById("brNote").value=b.note||"";
+  document.getElementById("brRating").value=b.rating||"4";
   document.getElementById("brewFormModal").classList.add("show");
 }
 
-async function saveBrew() {
+async function saveBrew(){
   const data={
     date:document.getElementById("brDate").value||today(),
     beanName:document.getElementById("brBeanInput").value.trim()||null,
     method:document.getElementById("brMethod").value,
-    temp:document.getElementById("brTemp").value?Number(document.getElementById("brTemp").value):null,
-    dose:document.getElementById("brDose").value?Number(document.getElementById("brDose").value):null,
-    water:document.getElementById("brWater").value?Number(document.getElementById("brWater").value):null,
-    ratio:document.getElementById("brRatio").value,
-    grind:document.getElementById("brGrind").value?Number(document.getElementById("brGrind").value):null,
-    bloom:mmssToSecs(document.getElementById("brBloom").value),
-    brewTime:mmssToSecs(document.getElementById("brBrewTime").value),
-    acidity:Number(document.getElementById("brAcidity").value), sweetness:Number(document.getElementById("brSweetness").value),
-    bitterness:Number(document.getElementById("brBitterness").value), body:Number(document.getElementById("brBody").value),
-    aftertaste:Number(document.getElementById("brAftertaste").value),
     note:document.getElementById("brNote").value.trim()||null,
-    vsNote:document.getElementById("brVs").value.trim()||null,
-    equipment:document.getElementById("brEquip").value.trim()||null,
-    rating:Number(document.getElementById("brRating").value)
+    rating:Number(document.getElementById("brRating").value),
+    acidity:null,sweetness:null,bitterness:null,body:null,aftertaste:null,
+    temp:null,dose:null,water:null,ratio:null,grind:null,bloom:null,brewTime:null,
+    vsNote:null,equipment:null
   };
-  try {
-    if (editingBrewId) {
-      const u=await dbUpdate("brews",editingBrewId,brewToRow(data));
-      const idx=brews.findIndex(b=>b.id===editingBrewId);
-      if(idx!==-1) brews[idx]=rowToBrew(u||{id:editingBrewId,...brewToRow(data)});
-      showToast("已更新 ✓");
-    } else {
-      const ins=await dbInsert("brews",brewToRow(data));
-      brews.unshift(rowToBrew(ins));
-      showToast("已儲存 ✓");
-    }
-    closeBrewForm(); renderBrews();
-  } catch(e) { showToast("儲存失敗："+e.message,true); }
+  try{
+    if(editingBrewId){const u=await dbUpdate("brews",editingBrewId,brewToRow(data));const idx=brews.findIndex(b=>b.id===editingBrewId);if(idx!==-1)brews[idx]=rowToBrew(u||{id:editingBrewId,...brewToRow(data)});showToast("已更新 ✓");}
+    else{const ins=await dbInsert("brews",brewToRow(data));brews.unshift(rowToBrew(ins));showToast("已儲存 ✓");}
+    closeBrewForm();renderBrews();
+  }catch(e) { showToast("儲存失敗："+e.message,true); }
 }
 
 async function deleteBrew(id) {
@@ -1049,10 +994,10 @@ const WINE_DYNAMIC = {
   white:     [["年份","vintage","number","例：2022"],["產區","region","text","例：Burgundy"],["國家","country","text","例：法國"],["葡萄品種","grape","text","例：Chardonnay"]],
   sparkling: [["年份","vintage","number","例：2018"],["產區","region","text","例：Champagne"],["國家","country","text","例：法國"]],
   rose:      [["年份","vintage","number","例：2023"],["產區","region","text","例：Provence"],["國家","country","text","例：法國"]],
-  whisky:    [["酒廠","distillery","text","例：Macallan"],["產區","region","text","例：Speyside"],["熟成年數","age_statement","text","例：12年"],["酒精濃度","abv","number","例：43"]],
-  sake:      [["酒造","distillery","text","例：獺祭"],["縣市","region","text","例：山口縣"],["種類","sake_type","text","例：純米大吟釀"],["精米步合","seimaibuai","text","例：50%"]],
+  whisky:    [["酒廠","distillery","text","例：Macallan"],["產區","region","select","蘇格蘭|日本|美國|愛爾蘭|台灣|加拿大|其他"],["熟成年數","age_statement","text","例：12年"],["酒精濃度","abv","number","例：43"]],
+  sake:      [["酒造","distillery","text","例：獺祭"],["縣市","region","text","例：山口縣"],["種類","sake_type","select","純米|吟釀|大吟釀|純米吟釀|純米大吟釀|本釀造|濁酒|其他"],["精米步合","seimaibuai","text","例：50%"]],
   makgeolli: [["酒廠","distillery","text","例：Shinpyeong"],["地區","makgeolli_region","text","例：首爾"]],
-  beer:      [["品牌","brewery","text","例：Guinness"],["國家","country","text","例：愛爾蘭"],["種類","beer_style","text","例：Stout"],["酒精濃度","abv","number","例：4.2"]],
+  beer:      [["品牌","brewery","text","例：Guinness"],["國家","country","text","例：愛爾蘭"],["種類","beer_style","select","Lager|Ale|IPA|Stout|小麥|Pilsner|Porter|Sour|其他"],["酒精濃度","abv","number","例：4.2"]],
   other:     [["種類說明","other_type","text","例：梅酒"]],
 };
 
@@ -1069,7 +1014,18 @@ function previewPhoto(event){const file=event.target.files[0];if(!file)return;up
 
 function renderWineTypePicker(){document.getElementById("wineTypePicker").innerHTML=WINE_TYPES.map(t=>`<button class="wine-type-btn ${currentWineType===t.key?"active":""}" onclick="selectWineType('${t.key}')">${t.label}</button>`).join("");renderWineDynamicFields();renderWineFlavorPicker();renderWineMeterFields();}
 function selectWineType(key){currentWineType=key;selectedWineFlavors=new Set();renderWineTypePicker();}
-function renderWineDynamicFields(){const fields=WINE_DYNAMIC[currentWineType]||[];document.getElementById("wDynamicFields").innerHTML=fields.length?`<div class="form-grid">${fields.map(([label,id,type,ph])=>`<label><span>${label}</span><input id="wd_${id}" type="${type}" placeholder="${ph}"></label>`).join("")}</div>`:"";}
+function renderWineDynamicFields(){
+  const fields=WINE_DYNAMIC[currentWineType]||[];
+  document.getElementById("wDynamicFields").innerHTML=fields.length
+    ?`<div class="form-grid">${fields.map(([label,id,type,ph])=>{
+        if(type==="select"){
+          const opts=ph.split("|").map(o=>`<option value="${o}">${o}</option>`).join("");
+          return`<label><span>${label}</span><select id="wd_${id}"><option value="">選擇${label}</option>${opts}</select></label>`;
+        }
+        return`<label><span>${label}</span><input id="wd_${id}" type="${type}" placeholder="${ph}"></label>`;
+      }).join("")}</div>`
+    :"";
+}
 function renderWineFlavorPicker(){const tags=WINE_FLAVORS[currentWineType]||[];document.getElementById("wFlavorPicker").innerHTML=tags.map(t=>`<button class="pill ${selectedWineFlavors.has(t)?"active":""}" onclick="toggleWineFlavor('${t}')">${t}</button>`).join("");}
 function toggleWineFlavor(tag){selectedWineFlavors.has(tag)?selectedWineFlavors.delete(tag):selectedWineFlavors.add(tag);renderWineFlavorPicker();}
 function addWineFlavor(){const input=document.getElementById("wFlavorOtherInput");const val=input.value.trim();if(!val||wineFlavorOthers.includes(val))return;wineFlavorOthers.push(val);input.value="";renderWineFlavorOtherTags();}
