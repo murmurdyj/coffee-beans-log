@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coffee Log</title>
+  <title>Coffee &amp; Wine Log</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -148,6 +148,28 @@
 
     #restoreInput { display: none; }
 
+    /* ── wine ── */
+    .wine-photo { width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:14px; margin-bottom:10px; background:#F4E3D0; display:flex; align-items:center; justify-content:center; font-size:32px; }
+    .wine-photo img { width:100%; height:100%; object-fit:cover; border-radius:14px; }
+    .wine-type-badge { border-radius:999px; padding:4px 10px; font-size:11px; font-weight:900; }
+    .type-red    { background:#FCE8EC; color:#8B1A2E; }
+    .type-white  { background:#FFFDE0; color:#7A6A00; }
+    .type-sparkling { background:#E8F4FC; color:#1A5F7A; }
+    .type-rose   { background:#FCE8F4; color:#8B1A6E; }
+    .type-whisky { background:#FFF0E0; color:#7A3A00; }
+    .type-sake   { background:#E8FCF0; color:#1A5F3A; }
+    .type-makgeolli { background:#F0E8FC; color:#4A1A7A; }
+    .type-beer   { background:#FFF8E0; color:#7A5A00; }
+    .type-other  { background:#F0F0F0; color:#4A4A4A; }
+    .wine-detail-photo { width:100%; max-height:300px; object-fit:cover; border-radius:18px; margin-bottom:16px; }
+    .wine-type-select { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0; }
+    .wine-type-btn { border-radius:14px; padding:10px 8px; font-size:13px; font-weight:900; background:#F4E3D0; color:#7A4D2B; transition:.15s; text-align:center; border:2px solid transparent; }
+    .wine-type-btn.active { border-color:#5B341F; background:#5B341F; color:#fff; }
+    .upload-area { border:2px dashed #E7D1BC; border-radius:14px; padding:20px; text-align:center; cursor:pointer; transition:.15s; background:#FFFDF9; }
+    .upload-area:hover { border-color:#B57943; background:#FFF8ED; }
+    .upload-preview { width:100%; max-height:200px; object-fit:cover; border-radius:12px; margin-top:10px; }
+    #winePhotoInput { display:none; }
+
     /* ── month groups ── */
     .month-group { margin-bottom: 24px; }
     .month-header {
@@ -192,6 +214,7 @@
   <div class="tabs">
     <button class="tab active" id="tabBeans" onclick="switchTab('beans')">☕ 咖啡豆紀錄</button>
     <button class="tab"        id="tabBrews" onclick="switchTab('brews')">🫗 沖煮日誌</button>
+    <button class="tab"        id="tabWines" onclick="switchTab('wines')">🍷 酒窖</button>
   </div>
 
   <input type="file" id="restoreInput" accept=".json" onchange="restoreJSON(event)">
@@ -217,6 +240,18 @@
       </div>
     </div>
     <div class="grid" id="brewCards"></div>
+  </div>
+
+  <!-- wines tab -->
+  <div id="pageWines" style="display:none;">
+    <div class="panel">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input id="wineSearch" oninput="renderWines()" placeholder="搜尋酒名、品牌、產區…" />
+      </div>
+      <div class="filters" id="wineTypeFilters"></div>
+    </div>
+    <div class="grid" id="wineCards"></div>
   </div>
 
 </div><!-- /wrap -->
@@ -386,6 +421,95 @@
   </div>
 </div>
 
+
+<!-- ══ WINE DETAIL modal ══ -->
+<div class="modal" id="wineDetailModal">
+  <div class="detail-inner" style="max-width:560px;">
+    <div class="detail-head">
+      <div><div class="detail-title" id="wdName"></div><div class="detail-sub" id="wdSub"></div></div>
+      <button class="close" onclick="closeWineDetail()">×</button>
+    </div>
+    <div id="wdPhoto"></div>
+    <div id="wdMeta" style="margin-bottom:12px;"></div>
+    <div class="section-box notes"><div class="section-title">🍷 風味標籤</div><div class="tags" id="wdTags"></div></div>
+    <div id="wdMeters"></div>
+    <div class="note-box" id="wdAromaBox"><strong style="font-size:12px;">香氣</strong><p id="wdAroma"></p></div>
+    <div class="note-box" style="margin-top:8px;"><strong style="font-size:12px;">品飲感受</strong><p id="wdNote"></p></div>
+    <div class="detail-footer">
+      <div><div class="muted" style="font-size:11px;font-weight:900;margin-bottom:2px;">整體評分</div><span class="stars" id="wdStars"></span></div>
+      <span class="repurchase" id="wdRepurchase"></span>
+    </div>
+    <div class="detail-actions">
+      <button class="btn secondary sm" id="wdEditBtn">✎ 編輯</button>
+      <button class="btn danger sm"    id="wdDeleteBtn">✕ 刪除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ WINE FORM modal ══ -->
+<div class="modal" id="wineFormModal">
+  <div class="form-inner">
+    <div class="modal-head">
+      <h2 id="wineModalTitle" style="font-size:18px;">新增酒窖紀錄</h2>
+      <button class="close" onclick="closeWineForm()">×</button>
+    </div>
+
+    <!-- 酒類選擇 -->
+    <div style="margin-bottom:4px;font-size:12px;font-weight:1000;">選擇酒類</div>
+    <div class="wine-type-select" id="wineTypePicker"></div>
+
+    <!-- 照片上傳 -->
+    <div class="upload-area" onclick="document.getElementById('winePhotoInput').click()" id="uploadArea">
+      <div id="uploadAreaIcon" style="font-size:24px;margin-bottom:6px;">📷</div>
+      <div style="font-size:13px;color:#A8866B;font-weight:900;">點擊拍照或上傳酒標</div>
+      <img id="uploadPreview" class="upload-preview" style="display:none;">
+    </div>
+    <input type="file" id="winePhotoInput" accept="image/*" capture="environment" onchange="previewPhoto(event)">
+
+    <!-- 通用欄位 -->
+    <div class="form-grid" style="margin-top:14px;">
+      <label><span>酒名</span><input id="wName" placeholder="例：Château Margaux"></label>
+      <label><span>品牌 / 酒莊 / 酒廠</span><input id="wBrand" placeholder="例：Margaux"></label>
+      <label><span>開瓶日期</span><input id="wOpenDate" type="date"></label>
+      <label><span>容量（ml）</span><input id="wVolume" type="number" placeholder="750"></label>
+      <label><span>價錢（元）</span><input id="wPrice" type="number" placeholder="1200"></label>
+      <label><span>購買地點</span><input id="wPurchasePlace" placeholder="例：誠品酒窖"></label>
+    </div>
+
+    <!-- 動態欄位區 -->
+    <div id="wDynamicFields" style="margin-top:12px;"></div>
+
+    <!-- 風味標籤 -->
+    <div class="form-section notes" style="margin-top:12px;">
+      <div class="section-title" style="margin-bottom:8px;">🍷 風味標籤</div>
+      <div class="filters" id="wFlavorPicker"></div>
+      <div style="margin-top:10px;display:flex;gap:7px;">
+        <input id="wFlavorOtherInput" placeholder="其他風味…" onkeydown="if(event.key==='Enter'){event.preventDefault();addWineFlavor()}" style="flex:1;">
+        <button class="honey-btn" onclick="addWineFlavor()">加入</button>
+      </div>
+      <div class="tags" id="wFlavorOtherTags" style="margin-top:9px;"></div>
+    </div>
+
+    <!-- 評分滑桿 (動態) -->
+    <div id="wMeterFields" style="margin-top:14px;"></div>
+
+    <!-- 香氣 + 感受 -->
+    <div class="form-grid" style="margin-top:12px;">
+      <label><span>香氣描述</span><textarea id="wAroma" placeholder="玫瑰、黑莓、雪松…"></textarea></label>
+      <label><span>品飲感受</span><textarea id="wNote" placeholder="入口的感覺、餘韻…"></textarea></label>
+    </div>
+    <label style="display:block;margin-top:12px;"><span>備註</span><input id="wMemo" placeholder="任何想記的事…"></label>
+
+    <div class="form-actions">
+      <div><span style="display:block;margin-bottom:4px;font-size:12px;font-weight:1000;">整體評分</span>
+        <select id="wRating" style="width:76px;"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option></select>
+      </div>
+      <label class="checkbox-row"><input id="wRepurchase" type="checkbox"> 會再買</label>
+      <button class="btn" onclick="saveWine()">儲存紀錄</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -490,8 +614,10 @@ function switchTab(tab) {
   currentTab = tab;
   document.getElementById("pageBeans").style.display = tab==="beans"?"block":"none";
   document.getElementById("pageBrews").style.display = tab==="brews"?"block":"none";
+  document.getElementById("pageWines").style.display = tab==="wines"?"block":"none";
   document.getElementById("tabBeans").className = "tab"+(tab==="beans"?" active":"");
   document.getElementById("tabBrews").className = "tab"+(tab==="brews"?" active":"");
+  document.getElementById("tabWines").className = "tab"+(tab==="wines"?" active":"");
   updateHero();
 }
 function updateHero() {
@@ -505,11 +631,16 @@ function updateHero() {
     document.getElementById("heroDesc").textContent    = "紀錄每支豆子的風味、烘焙、感受。";
     document.getElementById("heroActions").innerHTML = sharedBtns +
       `<button class="btn" onclick="openBeanForm()">＋ 新增</button>`;
-  } else {
+  } else if (currentTab==="brews") {
     document.getElementById("heroEyebrow").textContent = "🫗 每日沖煮日誌";
     document.getElementById("heroDesc").textContent    = "記錄每次沖的參數與味道差異。";
     document.getElementById("heroActions").innerHTML = sharedBtns +
       `<button class="btn" onclick="openBrewForm()">＋ 新增</button>`;
+  } else {
+    document.getElementById("heroEyebrow").textContent = "🍷 我的酒窖";
+    document.getElementById("heroDesc").textContent    = "紀錄每支酒的風味、產區、感受，附酒標照片。";
+    document.getElementById("heroActions").innerHTML = sharedBtns +
+      `<button class="btn" onclick="openWineForm()">＋ 新增</button>`;
   }
 }
 
@@ -876,24 +1007,200 @@ function restoreJSON(event) {
   reader.readAsText(file);
 }
 
+
+/* ══════════════════════════════════════════
+   WINE MODULE
+══════════════════════════════════════════ */
+const WINE_TYPES = [
+  { key:"red",       label:"🍷 紅酒",    badge:"type-red" },
+  { key:"white",     label:"🥂 白酒",    badge:"type-white" },
+  { key:"sparkling", label:"🍾 氣泡酒",  badge:"type-sparkling" },
+  { key:"rose",      label:"🌸 粉紅酒",  badge:"type-rose" },
+  { key:"whisky",    label:"🥃 威士忌",  badge:"type-whisky" },
+  { key:"sake",      label:"🍶 清酒",    badge:"type-sake" },
+  { key:"makgeolli", label:"🥛 馬格利",  badge:"type-makgeolli" },
+  { key:"beer",      label:"🍺 啤酒",    badge:"type-beer" },
+  { key:"other",     label:"📦 其他",    badge:"type-other" },
+];
+const WINE_FLAVORS = {
+  red:       ["黑莓","櫻桃","李子","草莓","玫瑰","紫羅蘭","菸草","皮革","香料","橡木","土壤","礦物","巧克力","雪松"],
+  white:     ["柑橘","檸檬","青蘋果","水蜜桃","梨子","鳳梨","蜂蜜","奶油","礦物","青草","花香","榛果"],
+  sparkling: ["青蘋果","柑橘","麵包","奶油","蜂蜜","花香","礦物","酵母","烤吐司"],
+  rose:      ["草莓","覆盆子","西瓜","玫瑰","柑橘","蜜桃","花香"],
+  whisky:    ["煙燻","泥煤","香草","焦糖","蜂蜜","果乾","橡木","香料","穀物","花香","皮革","巧克力","海鹽"],
+  sake:      ["米香","花香","果香","哈密瓜","蘋果","梨子","香蕉","乳酸","優格","堅果","草本","umami"],
+  makgeolli: ["米香","甜","酸","碳酸感","奶油","果香","花香","乳酸","土壤","堅果"],
+  beer:      ["苦味","麥香","果香","花香","柑橘","松脂","焦糖","咖啡","巧克力","煙燻","酵母"],
+  other:     [],
+};
+const WINE_METERS = {
+  red:       [["單寧","tannin"],["酸度","acidity"],["甜感","sweetness"],["酒體","body"],["餘韻","finish"]],
+  white:     [["酸度","acidity"],["甜感","sweetness"],["酒體","body"],["礦物感","tannin"],["餘韻","finish"]],
+  sparkling: [["酸度","acidity"],["甜感","sweetness"],["氣泡感","tannin"],["酒體","body"],["餘韻","finish"]],
+  rose:      [["酸度","acidity"],["甜感","sweetness"],["酒體","body"],["果香","tannin"],["餘韻","finish"]],
+  whisky:    [["煙燻感","smokiness"],["甜感","sweetness"],["酒體","body"],["辛辣感","tannin"],["餘韻","finish"]],
+  sake:      [["酸度","acidity"],["甜感","sweetness"],["酒體","body"],["米香","tannin"],["餘韻","finish"]],
+  makgeolli: [["酸度","acidity"],["甜感","sweetness"],["碳酸感","tannin"],["酒體","body"],["餘韻","finish"]],
+  beer:      [["苦度","bitterness"],["麥感","tannin"],["甜感","sweetness"],["酒體","body"],["餘韻","finish"]],
+  other:     [["酸度","acidity"],["甜感","sweetness"],["酒體","body"],["餘韻","finish"]],
+};
+const WINE_DYNAMIC = {
+  red:       [["年份","vintage","number","例：2019"],["產區","region","text","例：Bordeaux"],["國家","country","text","例：法國"],["葡萄品種","grape","text","例：Cabernet Sauvignon"]],
+  white:     [["年份","vintage","number","例：2022"],["產區","region","text","例：Burgundy"],["國家","country","text","例：法國"],["葡萄品種","grape","text","例：Chardonnay"]],
+  sparkling: [["年份","vintage","number","例：2018"],["產區","region","text","例：Champagne"],["國家","country","text","例：法國"]],
+  rose:      [["年份","vintage","number","例：2023"],["產區","region","text","例：Provence"],["國家","country","text","例：法國"]],
+  whisky:    [["酒廠","distillery","text","例：Macallan"],["產區","region","text","例：Speyside"],["熟成年數","age_statement","text","例：12年"],["酒精濃度","abv","number","例：43"]],
+  sake:      [["酒造","distillery","text","例：獺祭"],["縣市","region","text","例：山口縣"],["種類","sake_type","text","例：純米大吟釀"],["精米步合","seimaibuai","text","例：50%"]],
+  makgeolli: [["酒廠","distillery","text","例：Shinpyeong"],["地區","makgeolli_region","text","例：首爾"]],
+  beer:      [["品牌","brewery","text","例：Guinness"],["國家","country","text","例：愛爾蘭"],["種類","beer_style","text","例：Stout"],["酒精濃度","abv","number","例：4.2"]],
+  other:     [["種類說明","other_type","text","例：梅酒"]],
+};
+
+let wines=[]; let editingWineId=null; let currentWineType="red";
+let selectedWineFlavors=new Set(); let wineFlavorOthers=[]; let uploadedPhotoFile=null;
+let wineTypeFilter="全部";
+
+function rowToWine(r){return{id:r.id,date:r.date,type:r.type,name:r.name,brand:r.brand,vintage:r.vintage,region:r.region,country:r.country,grape:r.grape,distillery:r.distillery,ageStatement:r.age_statement,abv:r.abv,brewery:r.brewery,beerStyle:r.beer_style,sakeType:r.sake_type,seimaibuai:r.seimaibuai,makgeolliRegion:r.makgeolli_region,otherType:r.other_type,volume:r.volume,price:r.price,purchasePlace:r.purchase_place,openDate:r.open_date,flavorTags:r.flavor_tags||"",flavorOther:r.flavor_other||"",tannin:r.tannin,acidity:r.acidity,sweetness:r.sweetness,body:r.body,finish:r.finish,bitterness:r.bitterness,smokiness:r.smokiness,aroma:r.aroma,note:r.note,rating:r.rating,repurchase:r.repurchase,memo:r.memo,photoUrl:r.photo_url};}
+function wineToRow(w){return{date:w.date,type:w.type,name:w.name,brand:w.brand||null,vintage:w.vintage||null,region:w.region||null,country:w.country||null,grape:w.grape||null,distillery:w.distillery||null,age_statement:w.ageStatement||null,abv:w.abv||null,brewery:w.brewery||null,beer_style:w.beerStyle||null,sake_type:w.sakeType||null,seimaibuai:w.seimaibuai||null,makgeolli_region:w.makgeolliRegion||null,other_type:w.otherType||null,volume:w.volume||null,price:w.price||null,purchase_place:w.purchasePlace||null,open_date:w.openDate||null,flavor_tags:w.flavorTags||null,flavor_other:w.flavorOther||null,tannin:w.tannin||null,acidity:w.acidity||null,sweetness:w.sweetness||null,body:w.body||null,finish:w.finish||null,bitterness:w.bitterness||null,smokiness:w.smokiness||null,aroma:w.aroma||null,note:w.note||null,rating:w.rating,repurchase:w.repurchase||false,memo:w.memo||null,photo_url:w.photoUrl||null};}
+
+async function uploadPhoto(file){const ext=file.name.split(".").pop();const fn=Date.now()+"."+ext;const res=await fetch(`${SUPA_URL}/storage/v1/object/wine-photos/${fn}`,{method:"POST",headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":file.type},body:file});if(!res.ok)throw new Error("照片上傳失敗");return`${SUPA_URL}/storage/v1/object/public/wine-photos/${fn}`;}
+
+function previewPhoto(event){const file=event.target.files[0];if(!file)return;uploadedPhotoFile=file;const reader=new FileReader();reader.onload=e=>{const img=document.getElementById("uploadPreview");img.src=e.target.result;img.style.display="block";document.getElementById("uploadAreaIcon").style.display="none";};reader.readAsDataURL(file);}
+
+function renderWineTypePicker(){document.getElementById("wineTypePicker").innerHTML=WINE_TYPES.map(t=>`<button class="wine-type-btn ${currentWineType===t.key?"active":""}" onclick="selectWineType('${t.key}')">${t.label}</button>`).join("");renderWineDynamicFields();renderWineFlavorPicker();renderWineMeterFields();}
+function selectWineType(key){currentWineType=key;selectedWineFlavors=new Set();renderWineTypePicker();}
+function renderWineDynamicFields(){const fields=WINE_DYNAMIC[currentWineType]||[];document.getElementById("wDynamicFields").innerHTML=fields.length?`<div class="form-grid">${fields.map(([label,id,type,ph])=>`<label><span>${label}</span><input id="wd_${id}" type="${type}" placeholder="${ph}"></label>`).join("")}</div>`:"";}
+function renderWineFlavorPicker(){const tags=WINE_FLAVORS[currentWineType]||[];document.getElementById("wFlavorPicker").innerHTML=tags.map(t=>`<button class="pill ${selectedWineFlavors.has(t)?"active":""}" onclick="toggleWineFlavor('${t}')">${t}</button>`).join("");}
+function toggleWineFlavor(tag){selectedWineFlavors.has(tag)?selectedWineFlavors.delete(tag):selectedWineFlavors.add(tag);renderWineFlavorPicker();}
+function addWineFlavor(){const input=document.getElementById("wFlavorOtherInput");const val=input.value.trim();if(!val||wineFlavorOthers.includes(val))return;wineFlavorOthers.push(val);input.value="";renderWineFlavorOtherTags();}
+function removeWineFlavor(i){wineFlavorOthers.splice(i,1);renderWineFlavorOtherTags();}
+function renderWineFlavorOtherTags(){document.getElementById("wFlavorOtherTags").innerHTML=wineFlavorOthers.map((t,i)=>`<button class="white-tag" onclick="removeWineFlavor(${i})"># ${esc(t)} ×</button>`).join("");}
+function renderWineMeterFields(){const meters=WINE_METERS[currentWineType]||[];document.getElementById("wMeterFields").innerHTML=`<div class="range-grid">${meters.map(([label,key])=>`<label><span>${label} <b id="wm_${key}_text">3/5</b></span><input id="wm_${key}" type="range" min="1" max="5" value="3" oninput="document.getElementById('wm_${key}_text').textContent=this.value+'/5'"></label>`).join("")}</div>`;}
+
+function renderWines(){
+  document.getElementById("wineTypeFilters").innerHTML=`<button class="pill ${wineTypeFilter==="全部"?"active":""}" onclick="wineTypeFilter='全部';renderWines();">全部</button>`+WINE_TYPES.map(t=>`<button class="pill ${wineTypeFilter===t.key?"active":""}" onclick="wineTypeFilter='${t.key}';renderWines();">${t.label}</button>`).join("");
+  const q=document.getElementById("wineSearch").value.trim().toLowerCase();
+  const filtered=wines.filter(w=>{const text=[w.name,w.brand,w.region,w.country,w.grape,w.distillery,w.note,w.flavorTags,w.flavorOther].join(" ").toLowerCase();return(!q||text.includes(q))&&(wineTypeFilter==="全部"||w.type===wineTypeFilter);});
+  if(!filtered.length){document.getElementById("wineCards").innerHTML=`<div class="empty-state"><div class="big">🍷</div><p>${wines.length?"沒有符合的紀錄":"還沒有酒窖紀錄，按右上角「＋ 新增」開始吧！"}</p></div>`;return;}
+  document.getElementById("wineCards").innerHTML=filtered.map(w=>{
+    const t=WINE_TYPES.find(x=>x.key===w.type);
+    const sub=[w.brand,w.vintage,w.region,w.country].filter(Boolean).join(" · ");
+    return`<div class="card" onclick="openWineDetail(${w.id})">
+      <div class="card-actions"><button class="icon-btn edit" onclick="event.stopPropagation();editWine(${w.id})">✎</button><button class="icon-btn delete" onclick="event.stopPropagation();deleteWine(${w.id})">✕</button></div>
+      ${w.photoUrl?`<img src="${w.photoUrl}" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;margin-bottom:10px;">`:`<div style="width:100%;aspect-ratio:3/4;background:#F4E3D0;border-radius:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:36px;">${t?.label.split(" ")[0]||"🍷"}</div>`}
+      <div class="card-name">${esc(w.name)}</div>
+      ${sub?`<div class="card-sub">${esc(sub)}</div>`:""}
+      <div class="card-footer"><span class="card-stars">${stars(w.rating)}</span>${t?`<span class="wine-type-badge ${t.badge}">${t.label}</span>`:""}</div>
+    </div>`;
+  }).join("");
+}
+
+function openWineDetail(id){
+  const w=wines.find(x=>x.id===id);if(!w)return;
+  const t=WINE_TYPES.find(x=>x.key===w.type);
+  document.getElementById("wdName").textContent=w.name;
+  const sub=[w.brand,w.vintage&&`${w.vintage}年`,w.region,w.country].filter(Boolean).join(" · ");
+  document.getElementById("wdSub").innerHTML=(sub?esc(sub)+"<br>":"")+(w.openDate?`開瓶：${w.openDate}`:"");
+  document.getElementById("wdPhoto").innerHTML=w.photoUrl?`<img src="${w.photoUrl}" class="wine-detail-photo">`:`<div style="width:100%;height:120px;background:#F4E3D0;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:14px;">${t?.label.split(" ")[0]||"🍷"}</div>`;
+  const metaItems=[w.price?`NT$${w.price}`:"",w.purchasePlace,w.volume?`${w.volume}ml`:"",w.abv?`${w.abv}%`:"",w.ageStatement,w.grape,w.distillery,w.sakeType,w.seimaibuai,w.beerStyle,w.otherType,w.memo].filter(Boolean);
+  document.getElementById("wdMeta").innerHTML=metaItems.map(m=>`<span class="badge" style="margin:2px 2px 4px;">${esc(m)}</span>`).join(" ");
+  const allTags=[...(w.flavorTags?w.flavorTags.split(",").map(s=>s.trim()).filter(Boolean):[]),...(w.flavorOther?w.flavorOther.split(",").map(s=>s.trim()).filter(Boolean):[])];
+  document.getElementById("wdTags").innerHTML=allTags.map(t=>`<span class="note-tag">${esc(t)}</span>`).join("")||`<span class="muted">尚未填寫</span>`;
+  const meters=WINE_METERS[w.type]||[];
+  document.getElementById("wdMeters").innerHTML=meters.map(([label,key])=>w[key]?meter(label,w[key]):"").join("");
+  document.getElementById("wdAroma").textContent=w.aroma||"尚未填寫";
+  document.getElementById("wdNote").textContent=w.note||"尚未填寫";
+  document.getElementById("wdStars").textContent=stars(w.rating);
+  const rep=document.getElementById("wdRepurchase");rep.textContent=w.repurchase?"會再買":"暫不回購";rep.className="repurchase"+(w.repurchase?"":" no");
+  document.getElementById("wdEditBtn").onclick=()=>{closeWineDetail();editWine(id);};
+  document.getElementById("wdDeleteBtn").onclick=()=>deleteWine(id);
+  document.getElementById("wineDetailModal").classList.add("show");
+}
+function closeWineDetail(){document.getElementById("wineDetailModal").classList.remove("show");}
+
+function openWineForm(){
+  editingWineId=null;currentWineType="red";selectedWineFlavors=new Set();wineFlavorOthers=[];uploadedPhotoFile=null;
+  document.getElementById("wineModalTitle").textContent="新增酒窖紀錄";
+  ["wName","wBrand","wVolume","wPrice","wPurchasePlace","wAroma","wNote","wMemo","wFlavorOtherInput"].forEach(i=>document.getElementById(i).value="");
+  document.getElementById("wOpenDate").value=today();document.getElementById("wRating").value="4";document.getElementById("wRepurchase").checked=false;
+  const img=document.getElementById("uploadPreview");img.style.display="none";img.src="";
+  document.getElementById("uploadAreaIcon").style.display="block";
+  document.getElementById("winePhotoInput").value="";
+  renderWineTypePicker();renderWineFlavorOtherTags();
+  document.getElementById("wineFormModal").classList.add("show");
+}
+function closeWineForm(){document.getElementById("wineFormModal").classList.remove("show");editingWineId=null;}
+
+function editWine(id){
+  const w=wines.find(x=>x.id===id);if(!w)return;
+  editingWineId=id;currentWineType=w.type||"red";
+  document.getElementById("wineModalTitle").textContent="編輯酒窖紀錄";
+  selectedWineFlavors=new Set(w.flavorTags?w.flavorTags.split(",").map(s=>s.trim()).filter(Boolean):[]);
+  wineFlavorOthers=w.flavorOther?w.flavorOther.split(",").map(s=>s.trim()).filter(Boolean):[];
+  uploadedPhotoFile=null;
+  document.getElementById("wName").value=w.name||"";document.getElementById("wBrand").value=w.brand||"";
+  document.getElementById("wVolume").value=w.volume||"";document.getElementById("wPrice").value=w.price||"";
+  document.getElementById("wPurchasePlace").value=w.purchasePlace||"";document.getElementById("wOpenDate").value=w.openDate||today();
+  document.getElementById("wAroma").value=w.aroma||"";document.getElementById("wNote").value=w.note||"";
+  document.getElementById("wMemo").value=w.memo||"";document.getElementById("wRating").value=w.rating||"4";
+  document.getElementById("wRepurchase").checked=!!w.repurchase;
+  const img=document.getElementById("uploadPreview");
+  if(w.photoUrl){img.src=w.photoUrl;img.style.display="block";document.getElementById("uploadAreaIcon").style.display="none";}
+  else{img.style.display="none";document.getElementById("uploadAreaIcon").style.display="block";}
+  renderWineTypePicker();renderWineFlavorOtherTags();
+  setTimeout(()=>{
+    const dynMap={vintage:"vintage",region:"region",country:"country",grape:"grape",distillery:"distillery",age_statement:"ageStatement",abv:"abv",brewery:"brewery",beer_style:"beerStyle",sake_type:"sakeType",seimaibuai:"seimaibuai",makgeolli_region:"makgeolliRegion",other_type:"otherType"};
+    (WINE_DYNAMIC[currentWineType]||[]).forEach(([,key])=>{const el=document.getElementById(`wd_${key}`);if(el)el.value=w[dynMap[key]]||"";});
+    (WINE_METERS[currentWineType]||[]).forEach(([,key])=>{const el=document.getElementById(`wm_${key}`);const txt=document.getElementById(`wm_${key}_text`);if(el&&w[key]){el.value=w[key];if(txt)txt.textContent=w[key]+"/5";}});
+  },50);
+  document.getElementById("wineFormModal").classList.add("show");
+}
+
+async function saveWine(){
+  const name=document.getElementById("wName").value.trim();if(!name){alert("請先填酒名");return;}
+  let photoUrl=editingWineId?(wines.find(w=>w.id===editingWineId)?.photoUrl||null):null;
+  if(uploadedPhotoFile){try{showToast("上傳照片中…");photoUrl=await uploadPhoto(uploadedPhotoFile);}catch(e){showToast("照片上傳失敗",true);return;}}
+  const getDyn=key=>{const el=document.getElementById(`wd_${key}`);return el?el.value.trim()||null:null;};
+  const getMeter=key=>{const el=document.getElementById(`wm_${key}`);return el?Number(el.value):null;};
+  const meterVals={};(WINE_METERS[currentWineType]||[]).forEach(([,key])=>meterVals[key]=getMeter(key));
+  const data={date:editingWineId?(wines.find(w=>w.id===editingWineId)?.date||today()):today(),type:currentWineType,name,brand:document.getElementById("wBrand").value.trim()||null,vintage:getDyn("vintage")?Number(getDyn("vintage")):null,region:getDyn("region"),country:getDyn("country"),grape:getDyn("grape"),distillery:getDyn("distillery"),ageStatement:getDyn("age_statement"),abv:getDyn("abv")?Number(getDyn("abv")):null,brewery:getDyn("brewery"),beerStyle:getDyn("beer_style"),sakeType:getDyn("sake_type"),seimaibuai:getDyn("seimaibuai"),makgeolliRegion:getDyn("makgeolli_region"),otherType:getDyn("other_type"),volume:document.getElementById("wVolume").value?Number(document.getElementById("wVolume").value):null,price:document.getElementById("wPrice").value?Number(document.getElementById("wPrice").value):null,purchasePlace:document.getElementById("wPurchasePlace").value.trim()||null,openDate:document.getElementById("wOpenDate").value||null,flavorTags:Array.from(selectedWineFlavors).join(", ")||null,flavorOther:wineFlavorOthers.join(", ")||null,...meterVals,aroma:document.getElementById("wAroma").value.trim()||null,note:document.getElementById("wNote").value.trim()||null,memo:document.getElementById("wMemo").value.trim()||null,rating:Number(document.getElementById("wRating").value),repurchase:document.getElementById("wRepurchase").checked,photoUrl};
+  try{
+    if(editingWineId){const u=await dbUpdate("wines",editingWineId,wineToRow(data));const idx=wines.findIndex(w=>w.id===editingWineId);if(idx!==-1)wines[idx]=rowToWine(u||{id:editingWineId,...wineToRow(data)});showToast("已更新 ✓");}
+    else{const ins=await dbInsert("wines",wineToRow(data));wines.unshift(rowToWine(ins));showToast("已儲存 ✓");}
+    closeWineForm();renderWines();
+  }catch(e){showToast("儲存失敗："+e.message,true);}
+}
+
+async function deleteWine(id){
+  const w=wines.find(x=>x.id===id);if(!w)return;
+  if(!confirm(`刪除「${w.name}」？`))return;
+  try{await dbDelete("wines",id);wines=wines.filter(x=>x.id!==id);closeWineDetail();renderWines();showToast("已刪除 ✓");}
+  catch(e){showToast("刪除失敗",true);}
+}
+
+
 /* ══ Load ══ */
 async function loadAll() {
   showToast("載入中…");
   try {
-    const [bRows,brRows]=await Promise.all([dbQ("beans","?order=id.desc"),dbQ("brews","?order=id.desc")]);
-    beans=bRows.map(rowToBean); brews=brRows.map(rowToBrew);
+    const [bRows,brRows,wRows]=await Promise.all([
+      dbQ("beans","?order=id.desc"),
+      dbQ("brews","?order=id.desc"),
+      dbQ("wines","?order=id.desc")
+    ]);
+    beans=bRows.map(rowToBean); brews=brRows.map(rowToBrew); wines=wRows.map(rowToWine);
     localStorage.setItem("coffeeBeansV2",JSON.stringify(beans));
     document.getElementById("toast").classList.remove("show");
-    renderBeans(); renderBrews();
+    renderBeans(); renderBrews(); renderWines();
   } catch(e) {
     beans=JSON.parse(localStorage.getItem("coffeeBeansV2"))||[];
-    renderBeans(); renderBrews();
+    renderBeans(); renderBrews(); renderWines();
     showToast("無法連線，顯示本地快取",true);
   }
 }
 
 /* ══ Modal backdrop close ══ */
-["beanDetailModal","beanFormModal","brewDetailModal","brewFormModal"].forEach(id=>{
+["beanDetailModal","beanFormModal","brewDetailModal","brewFormModal","wineDetailModal","wineFormModal"].forEach(id=>{
   document.getElementById(id).addEventListener("click",e=>{
     if(e.target===document.getElementById(id)) document.getElementById(id).classList.remove("show");
   });
